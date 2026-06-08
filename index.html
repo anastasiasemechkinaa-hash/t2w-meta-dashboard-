@@ -528,7 +528,6 @@
           <th onclick="sortTable('impressions')">Wyświetlenia ↕</th>
           <th onclick="sortTable('clicks')">Kliknięcia ↕</th>
           <th onclick="sortTable('cpc')">CPC ↕<span class="tip" data-tip="Cost Per Click — koszt jednego kliknięcia w reklamę">?</span></th>
-          <th onclick="sortTable('cpm')">CPM ↕<span class="tip" data-tip="Cost Per Mille — koszt 1000 wyświetleń reklamy">?</span></th>
           <th onclick="sortTable('leads')">📋 Aplikacje ↕<span class="tip" data-tip="Konwersje z piksela: wypełnione formularze, aplikacje do bazy kandydatów (wszystkie kroki)">?</span></th>
           <th onclick="sortTable('calls')">📞 Telefony ↕<span class="tip" data-tip="Kliknięcia w przycisk 'Zadzwoń' w reklamie (Click-to-Call). Działa tylko gdy reklama ma przycisk połączenia.">?</span></th>
         </tr>
@@ -756,7 +755,6 @@
         <td>${impr}</td>
         <td>${clicks}</td>
         <td>${cpc}</td>
-        <td>${cpm}</td>
         <td style="text-align:center">${leadsStr}</td>
         <td style="text-align:center">${callsStr}</td>
       </tr>`;
@@ -848,7 +846,7 @@
     const token = getToken();
     try {
       const url = `https://graph.facebook.com/v25.0/${adsetId}/ads`
-        + `?fields=name,status,creative{image_url,thumbnail_url,title,body}`
+        + `?fields=name,status,creative{image_url,thumbnail_url,title,body,object_story_spec,asset_feed_spec,effective_object_story_id}`
         + `&limit=20&access_token=${token}`;
       const res = await fetch(url);
       const json = await res.json();
@@ -862,13 +860,22 @@
       }
       const grid = document.getElementById('adsGrid');
       ads.forEach(ad => {
-        const img = ad.creative?.image_url || ad.creative?.thumbnail_url || '';
-        const title = ad.creative?.title || ad.name || '—';
+        const c = ad.creative || {};
+        const img = c.image_url || c.thumbnail_url || '';
+        const title = c.title
+          || c.object_story_spec?.link_data?.name
+          || c.object_story_spec?.video_data?.title
+          || ad.name || '—';
+        const body = c.body
+          || c.object_story_spec?.link_data?.message
+          || c.object_story_spec?.video_data?.message
+          || c.asset_feed_spec?.bodies?.[0]?.text
+          || '';
         const statusBadge = ad.status === 'ACTIVE'
           ? '<span class="badge badge-active">Aktywna</span>'
           : '<span class="badge badge-paused">Wstrzymana</span>';
         const adIdx = `ad_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-        const hasLongBody = ad.creative?.body && ad.creative.body.length > 100;
+        const hasLongBody = body && body.length > 100;
         grid.innerHTML += `<div class="ad-card">
           ${img
             ? `<img src="${img}" alt="${title}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
@@ -877,11 +884,12 @@
           }
           <div class="ad-card-body">
             <div class="ad-card-name">${ad.name}</div>
+            ${title !== ad.name ? `<div style="font-size:11px;color:#F5A000;font-weight:700;margin-bottom:4px">${title}</div>` : ''}
             <div class="ad-card-status">${statusBadge}</div>
-            ${ad.creative?.body ? `
-              <div class="ad-body-text collapsed" id="${adIdx}">${ad.creative.body}</div>
+            ${body ? `
+              <div class="ad-body-text collapsed" id="${adIdx}">${body}</div>
               ${hasLongBody ? `<button class="btn-more" onclick="toggleBody('${adIdx}', this)">Pokaż więcej ▼</button>` : ''}
-            ` : ''}
+            ` : '<div style="font-size:11px;color:#ccc;margin-top:6px">Brak tekstu reklamy</div>'}
           </div>
         </div>`;
       });
