@@ -521,6 +521,7 @@
         <tr>
           <th onclick="sortTable('campaign_name')">Kampania ↕</th>
           <th onclick="sortTable('name')">Zestaw reklam ↕</th>
+          <th>Reklama</th>
           <th>Status</th>
           <th onclick="sortTable('daily_budget')">Budżet/dzień ↕</th>
           <th onclick="sortTable('spend')">Wydane ↕</th>
@@ -747,7 +748,8 @@
 
       tbody.innerHTML += `<tr>
         <td><div class="campaign-name">${campBadge} ${campName}</div></td>
-        <td><div class="num">${d.name} <button class="btn-preview" onclick="openModal('${d.id}','${d.name.replace(/'/g,"\\'")}')">🔍</button></div></td>
+        <td><div class="num">${d.name}</div></td>
+        <td style="text-align:center"><button class="btn-preview" onclick="openModal('${d.id}','${d.name.replace(/'/g,"\\'")}')">🔍</button></td>
         <td>${badge}</td>
         <td class="num">${budget}</td>
         <td class="num-orange">${spend !== '—' ? spend+' zł' : '—'}</td>
