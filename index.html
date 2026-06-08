@@ -846,14 +846,33 @@
     const token = getToken();
     try {
       const url = `https://graph.facebook.com/v25.0/${adsetId}/ads`
-        + `?fields=name,status,creative{image_url,thumbnail_url,title,body,object_story_spec{link_data{picture,name,message,image_crops},video_data{image_url,title,message}},asset_feed_spec,effective_object_story_id}`
+        + `?fields=name,status,creative{id,image_hash,image_url,thumbnail_url,title,body,object_story_spec{link_data{picture,name,message},video_data{image_url,title,message}},asset_feed_spec}`
         + `&limit=20&access_token=${token}`;
       const res = await fetch(url);
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
 
-      document.getElementById('modalLoader').style.display = 'none';
       const ads = json.data || [];
+
+      // Збираємо image_hash для отримання повного розміру
+      const hashes = ads.map(a => a.creative?.image_hash).filter(Boolean);
+      let hashToUrl = {};
+      if (hashes.length > 0) {
+        try {
+          const imgRes = await fetch(
+            `https://graph.facebook.com/v25.0/${AD_ACCOUNT_ID}/adimages`
+            + `?hashes=${encodeURIComponent(JSON.stringify(hashes))}`
+            + `&fields=hash,url`
+            + `&access_token=${token}`
+          );
+          const imgJson = await imgRes.json();
+          if (imgJson.data) {
+            imgJson.data.forEach(img => { hashToUrl[img.hash] = img.url; });
+          }
+        } catch(e) { /* якщо не вдалось — fallback до thumbnail */ }
+      }
+
+      document.getElementById('modalLoader').style.display = 'none';
       if (ads.length === 0) {
         document.getElementById('adsGrid').innerHTML = '<p style="color:#aaa;font-size:13px;">Brak reklam w tym zestawie.</p>';
         return;
@@ -861,8 +880,9 @@
       const grid = document.getElementById('adsGrid');
       ads.forEach(ad => {
         const c = ad.creative || {};
-        const img = c.object_story_spec?.link_data?.picture
+        const img = (c.image_hash && hashToUrl[c.image_hash])
           || c.object_story_spec?.video_data?.image_url
+          || c.object_story_spec?.link_data?.picture
           || c.image_url
           || c.thumbnail_url || '';
         const title = c.title
