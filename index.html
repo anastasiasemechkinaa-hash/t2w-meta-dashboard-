@@ -257,6 +257,102 @@
     }
     .error-box.visible { display: block; }
 
+    /* ─── MODAL ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.visible { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #111;
+      margin-bottom: 4px;
+    }
+    .modal-sub {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 20px;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 50%;
+      width: 32px; height: 32px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: #e0e0e0; }
+    .ads-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .ad-card {
+      border: 1px solid #f0f0f0;
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 12px;
+    }
+    .ad-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      background: #f5f5f5;
+      display: block;
+    }
+    .ad-card .ad-card-body {
+      padding: 10px;
+    }
+    .ad-card .ad-card-name {
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+    .ad-card .ad-card-status {
+      font-size: 10px;
+      color: #aaa;
+    }
+    .ad-no-img {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: #ccc;
+    }
+    .btn-preview {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .btn-preview:hover { background: #f5f5f5; }
+
     /* ─── FOOTER ─── */
     footer { text-align: center; padding: 32px; font-size: 12px; color: #bbb; }
     footer strong { color: #F5A000; }
@@ -285,9 +381,29 @@
   <h2>🔐 Połącz z Meta Ads</h2>
   <p>Wklej swój <strong>Access Token</strong> z Graph API Explorer.<br/>
   Token jest przechowywany tylko w Twojej przeglądarce (localStorage).</p>
-  <input type="password" class="token-input" id="tokenInput" placeholder="EAABsbCS..." />
+  <div style="position:relative;">
+    <input type="password" class="token-input" id="tokenInput" placeholder="EAABsbCS..." style="padding-right:48px"/>
+    <button onclick="toggleToken()" id="eyeBtn" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;" title="Pokaż/ukryj token">👁️</button>
+  </div>
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#666;margin-bottom:12px;cursor:pointer;">
+    <input type="checkbox" id="rememberToken" checked style="accent-color:#F5A000;width:16px;height:16px;"/>
+    Zapamiętaj token na tym urządzeniu
+  </label>
   <button class="btn-connect" onclick="connect()">Połącz z Meta Ads →</button>
   <p class="token-hint">Jak uzyskać token: developers.facebook.com/tools/explorer → Generate Access Token (ads_read)</p>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    <div class="modal-title" id="modalTitle">Grafiki reklam</div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="modal-loader" id="modalLoader" style="text-align:center;padding:32px;color:#aaa;">
+      <div style="display:inline-block;width:28px;height:28px;border:3px solid #f0f0f0;border-top-color:#F5A000;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+    </div>
+    <div class="ads-grid" id="adsGrid"></div>
+  </div>
 </div>
 
 <!-- MAIN DASHBOARD -->
@@ -365,6 +481,8 @@
           <th onclick="sortTable('clicks')">Kliknięcia ↕</th>
           <th onclick="sortTable('cpc')">CPC ↕</th>
           <th onclick="sortTable('cpm')">CPM ↕</th>
+          <th onclick="sortTable('leads')" title="Wypełnione formularze / ankiety">📋 Formularze ↕</th>
+          <th onclick="sortTable('calls')" title="Kliknięcia w numer telefonu">📞 Telefony ↕</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -383,10 +501,28 @@
   let sortDir = -1;
 
   // ─── TOKEN ───
+  function toggleToken() {
+    const input = document.getElementById('tokenInput');
+    const btn = document.getElementById('eyeBtn');
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁️';
+    }
+  }
+
   function connect() {
     const token = document.getElementById('tokenInput').value.trim();
     if (!token) return alert('Wklej token!');
-    localStorage.setItem('meta_token', token);
+    const remember = document.getElementById('rememberToken').checked;
+    if (remember) {
+      localStorage.setItem('meta_token', token);
+    } else {
+      sessionStorage.setItem('meta_token', token);
+      localStorage.removeItem('meta_token');
+    }
     init();
   }
 
@@ -395,7 +531,7 @@
     location.reload();
   }
 
-  function getToken() { return localStorage.getItem('meta_token'); }
+  function getToken() { return localStorage.getItem('meta_token') || sessionStorage.getItem('meta_token'); }
 
   // ─── INIT ───
   function init() {
@@ -545,9 +681,14 @@
         : '<span class="badge badge-paused">Wstrzymany</span>';
       const campBadge = getCampaignBadge(campName);
 
+      const leads = getAction(ins, ['lead', 'onsite_conversion.lead_grouped', 'complete_registration']);
+      const calls = getAction(ins, ['phone_call', 'click_to_call']);
+      const leadsStr = leads > 0 ? `<span class="num" style="color:#1976D2">${leads}</span>` : '<span class="muted">—</span>';
+      const callsStr = calls > 0 ? `<span class="num" style="color:#2E7D32">${calls}</span>` : '<span class="muted">—</span>';
+
       tbody.innerHTML += `<tr>
         <td><div class="campaign-name">${campBadge} ${campName}</div></td>
-        <td><div class="num">${d.name}</div></td>
+        <td><div class="num">${d.name} <button class="btn-preview" onclick="openModal('${d.id}','${d.name.replace(/'/g,"\\'")}')">🔍</button></div></td>
         <td>${badge}</td>
         <td class="num">${budget}</td>
         <td class="num-orange">${spend !== '—' ? spend+' zł' : '—'}</td>
@@ -555,8 +696,17 @@
         <td>${clicks}</td>
         <td>${cpc}</td>
         <td>${cpm}</td>
+        <td style="text-align:center">${leadsStr}</td>
+        <td style="text-align:center">${callsStr}</td>
       </tr>`;
     });
+  }
+
+  function getAction(ins, types) {
+    if (!ins?.actions) return 0;
+    return ins.actions
+      .filter(a => types.includes(a.action_type))
+      .reduce((sum, a) => sum + parseInt(a.value || 0), 0);
   }
 
   function getCampaignBadge(name) {
@@ -576,6 +726,8 @@
     if (key === 'cpc') return ins ? parseFloat(ins.cpc||0) : 0;
     if (key === 'cpm') return ins ? parseFloat(ins.cpm||0) : 0;
     if (key === 'daily_budget') return d.daily_budget ? parseInt(d.daily_budget) : 0;
+    if (key === 'leads') return getAction(d.insights?.data?.[0], ['lead','onsite_conversion.lead_grouped','complete_registration']);
+    if (key === 'calls') return getAction(d.insights?.data?.[0], ['phone_call','click_to_call']);
     if (key === 'name') return d.name || '';
     if (key === 'campaign_name') return d.campaign?.name || '';
     return 0;
@@ -612,6 +764,63 @@
   }
   function hideError() {
     document.getElementById('errorBox').classList.remove('visible');
+  }
+
+  // ─── MODAL ───
+  async function openModal(adsetId, adsetName) {
+    document.getElementById('modalTitle').textContent = adsetName;
+    document.getElementById('modalSub').textContent = 'Grafiki reklam w tym zestawie';
+    document.getElementById('adsGrid').innerHTML = '';
+    document.getElementById('modalLoader').style.display = 'block';
+    document.getElementById('modalOverlay').classList.add('visible');
+
+    const token = getToken();
+    try {
+      const url = `https://graph.facebook.com/v25.0/${adsetId}/ads`
+        + `?fields=name,status,creative{image_url,thumbnail_url,title,body}`
+        + `&limit=20&access_token=${token}`;
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+
+      document.getElementById('modalLoader').style.display = 'none';
+      const ads = json.data || [];
+      if (ads.length === 0) {
+        document.getElementById('adsGrid').innerHTML = '<p style="color:#aaa;font-size:13px;">Brak reklam w tym zestawie.</p>';
+        return;
+      }
+      const grid = document.getElementById('adsGrid');
+      ads.forEach(ad => {
+        const img = ad.creative?.image_url || ad.creative?.thumbnail_url || '';
+        const title = ad.creative?.title || ad.name || '—';
+        const statusBadge = ad.status === 'ACTIVE'
+          ? '<span class="badge badge-active">Aktywna</span>'
+          : '<span class="badge badge-paused">Wstrzymana</span>';
+        grid.innerHTML += `<div class="ad-card">
+          ${img
+            ? `<img src="${img}" alt="${title}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+               <div class="ad-no-img" style="display:none">🖼️</div>`
+            : `<div class="ad-no-img">🖼️</div>`
+          }
+          <div class="ad-card-body">
+            <div class="ad-card-name">${ad.name}</div>
+            <div class="ad-card-status">${statusBadge}</div>
+            ${ad.creative?.body ? `<div style="color:#666;margin-top:6px;font-size:11px;line-height:1.4">${ad.creative.body.substring(0,80)}${ad.creative.body.length>80?'…':''}</div>` : ''}
+          </div>
+        </div>`;
+      });
+    } catch(e) {
+      document.getElementById('modalLoader').style.display = 'none';
+      document.getElementById('adsGrid').innerHTML = `<p style="color:#c00;font-size:13px;">Błąd: ${e.message}</p>`;
+    }
+  }
+
+  function closeModal(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModalBtn();
+  }
+  function closeModalBtn() {
+    document.getElementById('modalOverlay').classList.remove('visible');
+    document.getElementById('adsGrid').innerHTML = '';
   }
 
   // ─── START ───
