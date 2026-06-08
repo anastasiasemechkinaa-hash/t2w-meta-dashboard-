@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>t2w — Meta Ads Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { font-family: 'Open Sans', sans-serif; background: #f4f4f4; color: #111; min-height: 100vh; }
+
+    /* ─── HEADER ─── */
+    .header {
+      background: #111;
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+    .logo { color: #F5A000; font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+    .logo span { color: #fff; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+    .status-dot.connected { background: #4CAF50; box-shadow: 0 0 6px #4CAF50; }
+    .status-text { font-size: 12px; color: #aaa; }
+
+    /* ─── TOKEN SETUP ─── */
+    .token-screen {
+      max-width: 560px;
+      margin: 80px auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 48px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .token-screen h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .token-screen p { color: #666; font-size: 13px; margin-bottom: 28px; line-height: 1.6; }
+    .token-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 13px;
+      font-family: monospace;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .token-input:focus { border-color: #F5A000; }
+    .btn-connect {
+      width: 100%;
+      padding: 14px;
+      background: #F5A000;
+      color: #111;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-connect:hover { background: #e09000; }
+    .token-hint { font-size: 11px; color: #aaa; margin-top: 12px; }
+
+    /* ─── MAIN LAYOUT ─── */
+    .main { display: none; padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+    .main.visible { display: block; }
+
+    /* ─── SEARCH + CONTROLS ─── */
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 28px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 240px; }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 16px; }
+    .search-input {
+      width: 100%;
+      padding: 12px 16px 12px 40px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+      background: #fff;
+    }
+    .search-input:focus { border-color: #F5A000; }
+    .filter-select {
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 13px;
+      outline: none;
+      background: #fff;
+      cursor: pointer;
+    }
+    .filter-select:focus { border-color: #F5A000; }
+    .btn-refresh {
+      padding: 12px 20px;
+      background: #111;
+      color: #F5A000;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-refresh:hover { background: #222; }
+    .btn-logout {
+      padding: 12px 16px;
+      background: transparent;
+      color: #aaa;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn-logout:hover { border-color: #ccc; color: #666; }
+
+    /* ─── SUMMARY CARDS ─── */
+    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .card.accent { background: #111; }
+    .card .c-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 6px; }
+    .card.accent .c-label { color: #F5A000; }
+    .card .c-val { font-size: 28px; font-weight: 800; color: #111; }
+    .card.accent .c-val { color: #fff; }
+    .card .c-sub { font-size: 11px; color: #bbb; margin-top: 2px; }
+
+    /* ─── DATE RANGE ─── */
+    .date-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .date-btn {
+      padding: 7px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #fff;
+      color: #666;
+      transition: all 0.15s;
+    }
+    .date-btn.active { border-color: #F5A000; background: #F5A000; color: #111; }
+    .date-btn:hover:not(.active) { border-color: #ccc; }
+
+    /* ─── SECTION TITLE ─── */
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #F5A000;
+      margin-bottom: 12px;
+    }
+
+    /* ─── TABLE ─── */
+    .table-wrap {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead tr { background: #111; }
+    thead th {
+      padding: 13px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:hover { color: #F5A000; }
+    thead th.sorted { color: #F5A000; }
+    tbody tr { border-bottom: 1px solid #f5f5f5; transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #fafafa; }
+    tbody td { padding: 13px 16px; vertical-align: middle; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-active { background: #E8F5E9; color: #2E7D32; }
+    .badge-paused { background: #FFF3E0; color: #E65100; }
+    .badge-p1 { background: #FFE0B2; color: #BF360C; }
+    .badge-p2 { background: #FFF9C4; color: #827717; }
+    .badge-p3 { background: #E8F5E9; color: #2E7D32; }
+    .badge-woj { background: #111; color: #F5A000; }
+
+    .num { font-weight: 700; }
+    .num-orange { font-weight: 800; color: #F5A000; }
+    .muted { color: #bbb; font-size: 12px; }
+
+    .campaign-name { font-weight: 600; max-width: 220px; }
+    .adset-name { color: #555; font-size: 12px; margin-top: 2px; }
+
+    /* ─── LOADING / EMPTY ─── */
+    .loader {
+      text-align: center;
+      padding: 60px;
+      color: #aaa;
+      font-size: 14px;
+    }
+    .loader .spin {
+      display: inline-block;
+      width: 32px; height: 32px;
+      border: 3px solid #f0f0f0;
+      border-top-color: #F5A000;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty { text-align: center; padding: 48px; color: #bbb; font-size: 14px; }
+
+    /* ─── ERROR ─── */
+    .error-box {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-size: 13px;
+      color: #856404;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .error-box.visible { display: block; }
+
+    /* ─── FOOTER ─── */
+    footer { text-align: center; padding: 32px; font-size: 12px; color: #bbb; }
+    footer strong { color: #F5A000; }
+
+    @media (max-width: 768px) {
+      .header { padding: 16px 20px; }
+      .main { padding: 20px; }
+      .cards { grid-template-columns: 1fr 1fr; }
+      thead th, tbody td { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">t2w <span>Ads Dashboard</span></div>
+  <div class="header-right">
+    <div class="status-dot" id="statusDot"></div>
+    <div class="status-text" id="statusText">Niepołączono</div>
+  </div>
+</div>
+
+<!-- TOKEN SCREEN -->
+<div class="token-screen" id="tokenScreen">
+  <h2>🔐 Połącz z Meta Ads</h2>
+  <p>Wklej swój <strong>Access Token</strong> z Graph API Explorer.<br/>
+  Token jest przechowywany tylko w Twojej przeglądarce (localStorage).</p>
+  <input type="password" class="token-input" id="tokenInput" placeholder="EAABsbCS..." />
+  <button class="btn-connect" onclick="connect()">Połącz z Meta Ads →</button>
+  <p class="token-hint">Jak uzyskać token: developers.facebook.com/tools/explorer → Generate Access Token (ads_read)</p>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div class="main" id="mainDash">
+
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- DATE RANGE -->
+  <div class="date-row">
+    <button class="date-btn active" onclick="setRange('today', this)">Dziś</button>
+    <button class="date-btn" onclick="setRange('yesterday', this)">Wczoraj</button>
+    <button class="date-btn" onclick="setRange('last_7d', this)">7 dni</button>
+    <button class="date-btn" onclick="setRange('last_30d', this)">30 dni</button>
+    <button class="date-btn" onclick="setRange('this_month', this)">Ten miesiąc</button>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="cards">
+    <div class="card accent">
+      <div class="c-label">Wydane łącznie</div>
+      <div class="c-val" id="cardSpend">—</div>
+      <div class="c-sub" id="cardSpendSub">w wybranym okresie</div>
+    </div>
+    <div class="card">
+      <div class="c-label">Aktywne zestawy</div>
+      <div class="c-val" id="cardActive">—</div>
+      <div class="c-sub">z <span id="cardTotal">—</span> wszystkich</div>
+    </div>
+    <div class="card">
+      <div class="c-label">Kliknięcia</div>
+      <div class="c-val" id="cardClicks">—</div>
+      <div class="c-sub">CTR: <span id="cardCtr">—</span></div>
+    </div>
+    <div class="card">
+      <div class="c-label">Wyświetlenia</div>
+      <div class="c-val" id="cardImpr">—</div>
+      <div class="c-sub">CPM: <span id="cardCpm">—</span> zł</div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="Szukaj kampanii lub zestawu reklam..." oninput="filterTable()"/>
+    </div>
+    <select class="filter-select" id="filterStatus" onchange="filterTable()">
+      <option value="">Wszystkie statusy</option>
+      <option value="ACTIVE">Aktywne</option>
+      <option value="PAUSED">Wstrzymane</option>
+    </select>
+    <select class="filter-select" id="filterCampaign" onchange="filterTable()">
+      <option value="">Wszystkie kampanie</option>
+    </select>
+    <button class="btn-refresh" onclick="loadData()">↻ Odśwież</button>
+    <button class="btn-logout" onclick="logout()">Wyloguj</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="section-title">Zestawy reklam</div>
+  <div class="table-wrap">
+    <div class="loader" id="loader">
+      <div class="spin"></div><br/>Pobieranie danych z Meta Ads...
+    </div>
+    <div class="empty" id="emptyMsg" style="display:none">Brak wyników dla podanej frazy.</div>
+    <table id="adsTable" style="display:none">
+      <thead>
+        <tr>
+          <th onclick="sortTable('campaign_name')">Kampania ↕</th>
+          <th onclick="sortTable('name')">Zestaw reklam ↕</th>
+          <th>Status</th>
+          <th onclick="sortTable('daily_budget')">Budżet/dzień ↕</th>
+          <th onclick="sortTable('spend')">Wydane ↕</th>
+          <th onclick="sortTable('impressions')">Wyświetlenia ↕</th>
+          <th onclick="sortTable('clicks')">Kliknięcia ↕</th>
+          <th onclick="sortTable('cpc')">CPC ↕</th>
+          <th onclick="sortTable('cpm')">CPM ↕</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer>t2w Ads Dashboard · <strong>time2work</strong> · dane na żywo z Meta Ads API</footer>
+
+<script>
+  const AD_ACCOUNT_ID = 'act_1646465662326629';
+  let allData = [];
+  let currentRange = 'today';
+  let sortKey = 'spend';
+  let sortDir = -1;
+
+  // ─── TOKEN ───
+  function connect() {
+    const token = document.getElementById('tokenInput').value.trim();
+    if (!token) return alert('Wklej token!');
+    localStorage.setItem('meta_token', token);
+    init();
+  }
+
+  function logout() {
+    localStorage.removeItem('meta_token');
+    location.reload();
+  }
+
+  function getToken() { return localStorage.getItem('meta_token'); }
+
+  // ─── INIT ───
+  function init() {
+    const token = getToken();
+    if (!token) return;
+    document.getElementById('tokenScreen').style.display = 'none';
+    document.getElementById('mainDash').classList.add('visible');
+    document.getElementById('statusDot').classList.add('connected');
+    document.getElementById('statusText').textContent = 'Połączono';
+    loadData();
+  }
+
+  // ─── DATE RANGE ───
+  function setRange(range, btn) {
+    currentRange = range;
+    document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadData();
+  }
+
+  function getDateRange(range) {
+    const today = new Date();
+    const fmt = d => d.toISOString().split('T')[0];
+    if (range === 'today') return { since: fmt(today), until: fmt(today) };
+    if (range === 'yesterday') {
+      const y = new Date(today); y.setDate(y.getDate()-1);
+      return { since: fmt(y), until: fmt(y) };
+    }
+    if (range === 'last_7d') {
+      const s = new Date(today); s.setDate(s.getDate()-6);
+      return { since: fmt(s), until: fmt(today) };
+    }
+    if (range === 'last_30d') {
+      const s = new Date(today); s.setDate(s.getDate()-29);
+      return { since: fmt(s), until: fmt(today) };
+    }
+    if (range === 'this_month') {
+      const s = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { since: fmt(s), until: fmt(today) };
+    }
+  }
+
+  // ─── LOAD DATA ───
+  async function loadData() {
+    const token = getToken();
+    if (!token) return;
+    showLoader(true);
+    hideError();
+
+    const { since, until } = getDateRange(currentRange);
+
+    try {
+      const fields = 'name,status,daily_budget,campaign_id,campaign{name}';
+      const insightFields = 'spend,impressions,clicks,cpc,cpm,actions';
+      const datePreset = `{"since":"${since}","until":"${until}"}`;
+
+      const url = `https://graph.facebook.com/v25.0/${AD_ACCOUNT_ID}/adsets`
+        + `?fields=${fields},insights.time_range(${encodeURIComponent(datePreset)}){${insightFields}}`
+        + `&limit=200`
+        + `&access_token=${token}`;
+
+      const res = await fetch(url);
+      const json = await res.json();
+
+      if (json.error) throw new Error(json.error.message);
+
+      allData = json.data || [];
+      renderTable(allData);
+      renderCards(allData);
+      populateCampaignFilter(allData);
+      showLoader(false);
+    } catch(e) {
+      showLoader(false);
+      showError('Błąd API: ' + e.message);
+    }
+  }
+
+  // ─── RENDER CARDS ───
+  function renderCards(data) {
+    let spend = 0, clicks = 0, impr = 0, active = 0;
+    data.forEach(d => {
+      const ins = d.insights?.data?.[0];
+      if (ins) {
+        spend += parseFloat(ins.spend || 0);
+        clicks += parseInt(ins.clicks || 0);
+        impr += parseInt(ins.impressions || 0);
+      }
+      if (d.status === 'ACTIVE') active++;
+    });
+    const ctr = impr > 0 ? ((clicks/impr)*100).toFixed(2) : '0';
+    const cpm = impr > 0 ? ((spend/impr)*1000).toFixed(2) : '0';
+
+    document.getElementById('cardSpend').textContent = spend.toFixed(2) + ' zł';
+    document.getElementById('cardActive').textContent = active;
+    document.getElementById('cardTotal').textContent = data.length;
+    document.getElementById('cardClicks').textContent = clicks.toLocaleString('pl');
+    document.getElementById('cardCtr').textContent = ctr + '%';
+    document.getElementById('cardImpr').textContent = impr.toLocaleString('pl');
+    document.getElementById('cardCpm').textContent = cpm;
+  }
+
+  // ─── RENDER TABLE ───
+  function renderTable(data) {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const statusF = document.getElementById('filterStatus').value;
+    const campF = document.getElementById('filterCampaign').value;
+
+    let filtered = data.filter(d => {
+      const name = (d.name || '').toLowerCase();
+      const camp = (d.campaign?.name || '').toLowerCase();
+      if (q && !name.includes(q) && !camp.includes(q)) return false;
+      if (statusF && d.status !== statusF) return false;
+      if (campF && d.campaign?.name !== campF) return false;
+      return true;
+    });
+
+    // sort
+    filtered.sort((a, b) => {
+      let av = getSortVal(a, sortKey);
+      let bv = getSortVal(b, sortKey);
+      if (typeof av === 'string') return sortDir * av.localeCompare(bv);
+      return sortDir * (av - bv);
+    });
+
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    if (filtered.length === 0) {
+      document.getElementById('adsTable').style.display = 'none';
+      document.getElementById('emptyMsg').style.display = 'block';
+      return;
+    }
+    document.getElementById('adsTable').style.display = 'table';
+    document.getElementById('emptyMsg').style.display = 'none';
+
+    filtered.forEach(d => {
+      const ins = d.insights?.data?.[0];
+      const spend = ins ? parseFloat(ins.spend||0).toFixed(2) : '—';
+      const impr = ins ? parseInt(ins.impressions||0).toLocaleString('pl') : '—';
+      const clicks = ins ? parseInt(ins.clicks||0).toLocaleString('pl') : '—';
+      const cpc = ins && ins.cpc ? parseFloat(ins.cpc).toFixed(2)+' zł' : '—';
+      const cpm = ins && ins.cpm ? parseFloat(ins.cpm).toFixed(2)+' zł' : '—';
+      const budget = d.daily_budget ? (parseInt(d.daily_budget)/100).toFixed(0)+' zł' : '—';
+      const campName = d.campaign?.name || '—';
+      const badge = d.status === 'ACTIVE'
+        ? '<span class="badge badge-active">Aktywny</span>'
+        : '<span class="badge badge-paused">Wstrzymany</span>';
+      const campBadge = getCampaignBadge(campName);
+
+      tbody.innerHTML += `<tr>
+        <td><div class="campaign-name">${campBadge} ${campName}</div></td>
+        <td><div class="num">${d.name}</div></td>
+        <td>${badge}</td>
+        <td class="num">${budget}</td>
+        <td class="num-orange">${spend !== '—' ? spend+' zł' : '—'}</td>
+        <td>${impr}</td>
+        <td>${clicks}</td>
+        <td>${cpc}</td>
+        <td>${cpm}</td>
+      </tr>`;
+    });
+  }
+
+  function getCampaignBadge(name) {
+    const n = name.toLowerCase();
+    if (n.includes('priorytet 1') || n.includes('pilne')) return '<span class="badge badge-p1">P1</span>';
+    if (n.includes('priorytet 2')) return '<span class="badge badge-p2">P2</span>';
+    if (n.includes('priorytet 3')) return '<span class="badge badge-p3">P3</span>';
+    if (n.includes('woj')) return '<span class="badge badge-woj">WOJ</span>';
+    return '';
+  }
+
+  function getSortVal(d, key) {
+    const ins = d.insights?.data?.[0];
+    if (key === 'spend') return ins ? parseFloat(ins.spend||0) : 0;
+    if (key === 'impressions') return ins ? parseInt(ins.impressions||0) : 0;
+    if (key === 'clicks') return ins ? parseInt(ins.clicks||0) : 0;
+    if (key === 'cpc') return ins ? parseFloat(ins.cpc||0) : 0;
+    if (key === 'cpm') return ins ? parseFloat(ins.cpm||0) : 0;
+    if (key === 'daily_budget') return d.daily_budget ? parseInt(d.daily_budget) : 0;
+    if (key === 'name') return d.name || '';
+    if (key === 'campaign_name') return d.campaign?.name || '';
+    return 0;
+  }
+
+  function sortTable(key) {
+    if (sortKey === key) sortDir *= -1;
+    else { sortKey = key; sortDir = -1; }
+    document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+    renderTable(allData);
+  }
+
+  function filterTable() { renderTable(allData); }
+
+  function populateCampaignFilter(data) {
+    const names = [...new Set(data.map(d => d.campaign?.name).filter(Boolean))].sort();
+    const sel = document.getElementById('filterCampaign');
+    sel.innerHTML = '<option value="">Wszystkie kampanie</option>';
+    names.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
+  }
+
+  // ─── UI HELPERS ───
+  function showLoader(v) {
+    document.getElementById('loader').style.display = v ? 'block' : 'none';
+    if (v) {
+      document.getElementById('adsTable').style.display = 'none';
+      document.getElementById('emptyMsg').style.display = 'none';
+    }
+  }
+  function showError(msg) {
+    const el = document.getElementById('errorBox');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+  function hideError() {
+    document.getElementById('errorBox').classList.remove('visible');
+  }
+
+  // ─── START ───
+  if (getToken()) init();
+</script>
+</body>
+</html>
