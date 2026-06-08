@@ -215,32 +215,35 @@
       background: #fff;
       border-radius: 14px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      overflow: hidden;
+      overflow-x: auto;
       margin-bottom: 32px;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
     thead tr { background: #111; }
     thead th {
-      padding: 13px 16px;
+      padding: 11px 12px;
       text-align: left;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.8px;
       color: #888;
       cursor: pointer;
       user-select: none;
+      white-space: nowrap;
     }
     thead th:hover { color: #F5A000; }
     thead th.sorted { color: #F5A000; }
     tbody tr { border-bottom: 1px solid #f5f5f5; transition: background 0.1s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: #fafafa; }
-    tbody td { padding: 13px 16px; vertical-align: middle; }
+    tbody td { padding: 10px 12px; vertical-align: middle; white-space: nowrap; }
+    /* Тільки назви можуть переноситись */
+    tbody td.wrap { white-space: normal; min-width: 140px; max-width: 200px; }
 
     .badge {
       display: inline-block;
-      padding: 3px 9px;
+      padding: 2px 8px;
       border-radius: 20px;
       font-size: 10px;
       font-weight: 700;
@@ -255,10 +258,11 @@
 
     .num { font-weight: 700; }
     .num-orange { font-weight: 800; color: #F5A000; }
-    .muted { color: #bbb; font-size: 12px; }
+    .muted { color: #bbb; font-size: 11px; }
+    .date-cell { color: #555; font-size: 11px; }
 
-    .campaign-name { font-weight: 600; max-width: 220px; }
-    .adset-name { color: #555; font-size: 12px; margin-top: 2px; }
+    .campaign-name { font-weight: 600; }
+    .adset-name { color: #555; font-size: 11px; margin-top: 2px; }
 
     /* ─── LOADING / EMPTY ─── */
     .loader {
@@ -643,7 +647,7 @@
     const { since, until } = getDateRange(currentRange);
 
     try {
-      const fields = 'name,status,daily_budget,campaign_id,campaign{name}';
+      const fields = 'name,status,daily_budget,campaign_id,campaign{name},created_time,start_time';
       const insightFields = 'spend,impressions,clicks,cpc,cpm,actions';
       const datePreset = `{"since":"${since}","until":"${until}"}`;
 
@@ -746,8 +750,8 @@
       const callsStr = calls > 0 ? `<span class="num" style="color:#2E7D32">${calls}</span>` : '<span class="muted">—</span>';
 
       tbody.innerHTML += `<tr>
-        <td><div class="campaign-name">${campBadge} ${campName}</div></td>
-        <td><div class="num">${d.name}</div></td>
+        <td class="wrap"><div class="campaign-name">${campBadge} ${campName}</div></td>
+        <td class="wrap"><div class="num">${d.name}</div><div class="date-cell">${fmtDate(d.start_time || d.created_time)}</div></td>
         <td style="text-align:center"><button class="btn-preview" onclick="openModal('${d.id}','${d.name.replace(/'/g,"\\'")}')">🔍</button></td>
         <td>${badge}</td>
         <td class="num">${budget}</td>
@@ -759,6 +763,12 @@
         <td style="text-align:center">${callsStr}</td>
       </tr>`;
     });
+  }
+
+  function fmtDate(str) {
+    if (!str) return '—';
+    const d = new Date(str);
+    return d.toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' });
   }
 
   function getAction(ins, types) {
@@ -797,6 +807,7 @@
     if (key === 'daily_budget') return d.daily_budget ? parseInt(d.daily_budget) : 0;
     if (key === 'leads') return getLeads(d.insights?.data?.[0]);
     if (key === 'calls') return getAction(d.insights?.data?.[0], ['phone_call','click_to_call']);
+    if (key === 'created_time') return new Date(d.start_time || d.created_time || 0).getTime();
     if (key === 'name') return d.name || '';
     if (key === 'campaign_name') return d.campaign?.name || '';
     return 0;
@@ -854,7 +865,7 @@
 
       const ads = json.data || [];
 
-      // Збираємо image_hash для отримання повного розміру
+      // 1) Збираємо image_hash для отримання повного розміру
       const hashes = ads.map(a => a.creative?.image_hash).filter(Boolean);
       let hashToUrl = {};
       if (hashes.length > 0) {
@@ -869,8 +880,31 @@
           if (imgJson.data) {
             imgJson.data.forEach(img => { hashToUrl[img.hash] = img.url; });
           }
-        } catch(e) { /* якщо не вдалось — fallback до thumbnail */ }
+        } catch(e) {}
       }
+
+      // 2) Dla reklam bez hash — pobierz image_url bezpośrednio po creative_id
+      const adsNeedingFetch = ads.filter(a => {
+        const c = a.creative || {};
+        return !hashToUrl[c.image_hash]
+          && !c.object_story_spec?.video_data?.image_url
+          && !c.object_story_spec?.link_data?.picture
+          && !c.image_url
+          && c.id;
+      });
+      const creativeIdToUrl = {};
+      await Promise.all(adsNeedingFetch.map(async a => {
+        try {
+          const r = await fetch(
+            `https://graph.facebook.com/v25.0/${a.creative.id}`
+            + `?fields=image_url,thumbnail_url`
+            + `&access_token=${token}`
+          );
+          const j = await r.json();
+          if (j.image_url) creativeIdToUrl[a.creative.id] = j.image_url;
+          else if (j.thumbnail_url) creativeIdToUrl[a.creative.id] = j.thumbnail_url;
+        } catch(e) {}
+      }));
 
       document.getElementById('modalLoader').style.display = 'none';
       if (ads.length === 0) {
@@ -883,6 +917,7 @@
         const img = (c.image_hash && hashToUrl[c.image_hash])
           || c.object_story_spec?.video_data?.image_url
           || c.object_story_spec?.link_data?.picture
+          || (c.id && creativeIdToUrl[c.id])
           || c.image_url
           || c.thumbnail_url || '';
         const title = c.title
