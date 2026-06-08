@@ -846,7 +846,7 @@
     const token = getToken();
     try {
       const url = `https://graph.facebook.com/v25.0/${adsetId}/ads`
-        + `?fields=name,status,creative{image_url,thumbnail_url,title,body,object_story_spec,asset_feed_spec,effective_object_story_id}`
+        + `?fields=name,status,creative{image_url,thumbnail_url,title,body,object_story_spec{link_data{picture,name,message,image_crops},video_data{image_url,title,message}},asset_feed_spec,effective_object_story_id}`
         + `&limit=20&access_token=${token}`;
       const res = await fetch(url);
       const json = await res.json();
@@ -861,7 +861,10 @@
       const grid = document.getElementById('adsGrid');
       ads.forEach(ad => {
         const c = ad.creative || {};
-        const img = c.image_url || c.thumbnail_url || '';
+        const img = c.object_story_spec?.link_data?.picture
+          || c.object_story_spec?.video_data?.image_url
+          || c.image_url
+          || c.thumbnail_url || '';
         const title = c.title
           || c.object_story_spec?.link_data?.name
           || c.object_story_spec?.video_data?.title
