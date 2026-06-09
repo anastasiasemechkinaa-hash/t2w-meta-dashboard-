@@ -747,7 +747,7 @@
       const campBadge = getCampaignBadge(campName);
 
       const leads = getLeads(ins);
-      const calls = getAction(ins, ['click_to_call_native_call_placed', 'click_to_call_call_confirm', 'call_confirm_grouped']);
+      const calls = getAction(ins, ['click_to_call_native_call_placed']);
       const leadsStr = leads > 0 ? `<span class="num" style="color:#1976D2">${leads}</span>` : '<span class="muted">—</span>';
       const callsStr = calls > 0 ? `<span class="num" style="color:#2E7D32">${calls}</span>` : '<span class="muted">—</span>';
 
@@ -808,7 +808,7 @@
     if (key === 'cpm') return ins ? parseFloat(ins.cpm||0) : 0;
     if (key === 'daily_budget') return d.daily_budget ? parseInt(d.daily_budget) : 0;
     if (key === 'leads') return getLeads(d.insights?.data?.[0]);
-    if (key === 'calls') return getAction(d.insights?.data?.[0], ['click_to_call_native_call_placed','click_to_call_call_confirm','call_confirm_grouped']);
+    if (key === 'calls') return getAction(d.insights?.data?.[0], ['click_to_call_native_call_placed']);
     if (key === 'created_time') return new Date(d.start_time || d.created_time || 0).getTime();
     if (key === 'name') return d.name || '';
     if (key === 'campaign_name') return d.campaign?.name || '';
