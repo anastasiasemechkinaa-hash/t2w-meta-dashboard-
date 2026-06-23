@@ -466,6 +466,46 @@
       .cards { grid-template-columns: 1fr 1fr; }
       thead th, tbody td { padding: 10px 12px; }
     }
+
+    /* ─── FIREBASE COMMENTS ─── */
+    .btn-comment { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; color: #888; transition: all .15s; white-space:nowrap; }
+    .btn-comment:hover { border-color: #F5A000; color: #F5A000; }
+    .btn-comment.has-notes { border-color: #F5A000; color: #F5A000; background: #fff8ee; }
+    .comment-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; display:none; align-items:flex-end; justify-content:flex-end; }
+    .comment-overlay.visible { display:flex; }
+    .comment-panel { background:#fff; width:380px; height:100vh; display:flex; flex-direction:column; box-shadow:-4px 0 24px rgba(0,0,0,.15); }
+    .comment-panel-header { background:#111; color:#fff; padding:16px 20px; display:flex; align-items:center; gap:12px; }
+    .comment-panel-titles { flex:1; }
+    .comment-panel-title { font-size:14px; font-weight:700; }
+    .comment-panel-sub { font-size:11px; color:#aaa; margin-top:2px; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .comment-panel-close { background:none; border:none; color:#fff; font-size:20px; cursor:pointer; }
+    .comment-list { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+    .comment-item { background:#f9f9f9; border-radius:10px; padding:10px 12px; }
+    .comment-meta { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+    .comment-avatar { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; flex-shrink:0; }
+    .comment-author { font-size:12px; font-weight:700; }
+    .comment-time { font-size:10px; color:#bbb; margin-left:auto; }
+    .comment-text { font-size:13px; color:#333; line-height:1.4; }
+    .comment-input-area { padding:12px 16px; border-top:1px solid #eee; display:flex; gap:8px; align-items:flex-end; }
+    .comment-input-area textarea { flex:1; border:1px solid #ddd; border-radius:8px; padding:8px 10px; font-size:13px; font-family:inherit; resize:none; outline:none; min-height:38px; max-height:100px; }
+    .comment-input-area textarea:focus { border-color:#F5A000; }
+    .comment-send { background:#F5A000; color:#111; border:none; border-radius:8px; padding:8px 14px; font-weight:800; font-size:13px; cursor:pointer; }
+    .comment-send:hover { background:#e09000; }
+    .comment-empty { text-align:center; padding:40px 20px; color:#bbb; font-size:13px; }
+
+    /* nickname modal */
+    .nick-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:2000; display:none; align-items:center; justify-content:center; }
+    .nick-overlay.visible { display:flex; }
+    .nick-box { background:#fff; border-radius:16px; padding:40px; max-width:360px; width:90%; text-align:center; }
+    .nick-box h3 { font-size:20px; font-weight:800; margin-bottom:8px; }
+    .nick-box p { color:#666; font-size:13px; margin-bottom:24px; line-height:1.5; }
+    .nick-box input { width:100%; padding:12px 14px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; outline:none; margin-bottom:12px; }
+    .nick-box input:focus { border-color:#F5A000; }
+    .nick-colors { display:flex; gap:8px; justify-content:center; margin-bottom:20px; }
+    .nick-colors span { width:28px; height:28px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:transform .15s; }
+    .nick-colors span.selected { border-color:#111; transform:scale(1.2); }
+    .nick-save { background:#F5A000; color:#111; border:none; border-radius:10px; padding:12px 32px; font-size:14px; font-weight:800; cursor:pointer; width:100%; }
+    .nick-save:hover { background:#e09000; }
   </style>
 </head>
 <body>
@@ -597,10 +637,17 @@
           <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px">Nazwa raportu</label>
           <input type="text" id="repTitle" placeholder="np. Maj 2026" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none"/>
         </div>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#444;cursor:pointer;background:#fff8ee;border:1px solid #fde68a;border-radius:8px;padding:10px 14px">
-          <input type="checkbox" id="repOnlyActive" checked style="accent-color:#F5A000;width:16px;height:16px;"/>
-          Tylko aktywne zestawy reklam w raporcie
-        </label>
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <label style="font-size:12px;font-weight:700;color:#555">Kampanie i zestawy reklam</label>
+            <div style="display:flex;gap:6px">
+              <button onclick="repSelectAll('active')" style="font-size:11px;padding:3px 8px;border:1px solid #F5A000;border-radius:5px;background:#fff8ee;color:#c67000;cursor:pointer;font-weight:700">✓ Aktywne</button>
+              <button onclick="repSelectAll('all')" style="font-size:11px;padding:3px 8px;border:1px solid #ddd;border-radius:5px;background:#fff;color:#666;cursor:pointer">Wszystkie</button>
+              <button onclick="repSelectAll('none')" style="font-size:11px;padding:3px 8px;border:1px solid #ddd;border-radius:5px;background:#fff;color:#666;cursor:pointer">Wyczyść</button>
+            </div>
+          </div>
+          <div id="repCampList" style="max-height:240px;overflow-y:auto;border:1px solid #e8e8e8;border-radius:8px;background:#fafafa"></div>
+        </div>
         <div style="display:flex;gap:10px;margin-top:4px">
           <button onclick="generateReport('html')" style="flex:1;padding:14px;background:#F5A000;color:#111;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">
             ⬇ Pobierz HTML
@@ -638,12 +685,51 @@
           <th onclick="sortTable('cpc')">CPC ↕<span class="tip" data-tip="Cost Per Click — koszt jednego kliknięcia w reklamę">?</span></th>
           <th onclick="sortTable('leads')">📋 Aplikacje ↕<span class="tip" data-tip="Konwersje z piksela: wypełnione formularze, aplikacje do bazy kandydatów (wszystkie kroki)">?</span></th>
           <th onclick="sortTable('calls')">📞 Telefony ↕<span class="tip" data-tip="Kliknięcia w przycisk 'Zadzwoń' w reklamie (Click-to-Call). Działa tylko gdy reklama ma przycisk połączenia.">?</span></th>
+          <th>💬</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
     </table>
   </div>
 
+</div>
+
+<!-- NICKNAME MODAL -->
+<div class="nick-overlay" id="nickModal">
+  <div class="nick-box">
+    <h3>👋 Witaj w dashboardzie!</h3>
+    <p>Podaj swoje imię — będzie widoczne przy komentarzach w kampaniach.</p>
+    <input type="text" id="nickInput" placeholder="np. Anastazja" maxlength="20"/>
+    <div class="nick-colors" id="nickColors">
+      <span style="background:#F5A000" class="selected" data-color="#F5A000"></span>
+      <span style="background:#e53935" data-color="#e53935"></span>
+      <span style="background:#1976D2" data-color="#1976D2"></span>
+      <span style="background:#2E7D32" data-color="#2E7D32"></span>
+      <span style="background:#7B1FA2" data-color="#7B1FA2"></span>
+      <span style="background:#00838F" data-color="#00838F"></span>
+    </div>
+    <button class="nick-save" onclick="saveNickname()">Zapisz i wejdź →</button>
+  </div>
+</div>
+
+<!-- COMMENTS PANEL -->
+<div class="comment-overlay" id="commentOverlay" onclick="if(event.target===this)closeComments()">
+  <div class="comment-panel">
+    <div class="comment-panel-header">
+      <div class="comment-panel-titles">
+        <div class="comment-panel-title">💬 Komentarze</div>
+        <div class="comment-panel-sub" id="commentPanelSub">—</div>
+      </div>
+      <button class="comment-panel-close" onclick="closeComments()">✕</button>
+    </div>
+    <div class="comment-list" id="commentList">
+      <div class="comment-empty">Brak komentarzy.<br>Bądź pierwszy!</div>
+    </div>
+    <div class="comment-input-area">
+      <textarea id="commentText" placeholder="Napisz komentarz..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendComment()}" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+      <button class="comment-send" onclick="sendComment()">Wyślij</button>
+    </div>
+  </div>
 </div>
 
 <!-- GOOGLE REPORT MODAL -->
@@ -1000,7 +1086,8 @@
         <td class="num">${tClicks>0?tClicks.toLocaleString('pl'):'—'}</td>
         <td class="num">${tCPC}</td>
         <td style="text-align:center">${tLeads>0?`<span class="num" style="color:#1976D2;font-weight:700">${tLeads}</span>`:'<span class="muted">—</span>'}</td>
-        <td style="text-align:center">${tCalls>0?`<span class="num" style="color:#2E7D32;font-weight:700">${tCalls}</span>`:'<span class="muted">—</span>'}</td>`;
+        <td style="text-align:center">${tCalls>0?`<span class="num" style="color:#2E7D32;font-weight:700">${tCalls}</span>`:'<span class="muted">—</span>'}</td>
+        <td style="text-align:center"><button class="btn-comment" id="cbtn-${cid}" onclick="event.stopPropagation();openComments('${cid}','${camp.name.replace(/'/g,"\\'")}')">💬</button></td>`;
       campTr.onclick = () => {
         const rows = tbody.querySelectorAll('.adset-row-'+key);
         const arr = document.getElementById('arr-'+key);
@@ -1041,7 +1128,8 @@
           <td class="num">${clicks>0?clicks.toLocaleString('pl'):'—'}</td>
           <td class="num">${cpc}</td>
           <td style="text-align:center">${leads>0?`<span class="num" style="color:#1976D2">${leads}</span>`:'<span class="muted">—</span>'}</td>
-          <td style="text-align:center">${calls>0?`<span class="num" style="color:#2E7D32">${calls}</span>`:'<span class="muted">—</span>'}</td>`;
+          <td style="text-align:center">${calls>0?`<span class="num" style="color:#2E7D32">${calls}</span>`:'<span class="muted">—</span>'}</td>
+          <td></td>`;
         tbody.appendChild(tr);
       });
     });
@@ -1294,7 +1382,74 @@
     document.getElementById('repFrom').value = since;
     document.getElementById('repTo').value = until;
     document.getElementById('repTitle').value = formatMonthTitle(since, until);
+    buildRepCampList();
     document.getElementById('generateModal').classList.add('visible');
+  }
+
+  function buildRepCampList() {
+    const container = document.getElementById('repCampList');
+    if (!allData || !allData.length) {
+      container.innerHTML = '<div style="padding:16px;text-align:center;color:#bbb;font-size:13px">Brak danych — najpierw załaduj Meta Ads</div>';
+      return;
+    }
+    // group by campaign
+    const camps = {};
+    allData.forEach(d => {
+      const cid = d.campaign_id || d.campaign?.name || 'x';
+      const cname = d.campaign?.name || '—';
+      if (!camps[cid]) camps[cid] = { name: cname, items: [] };
+      camps[cid].items.push(d);
+    });
+
+    container.innerHTML = Object.entries(camps).map(([cid, camp]) => {
+      const ck = cid.replace(/\W/g,'_');
+      const hasActive = camp.items.some(d => d.status === 'ACTIVE');
+      const adsets = camp.items.map(d => {
+        const isActive = d.status === 'ACTIVE';
+        const ins = d.insights?.data?.[0];
+        const spend = ins ? parseFloat(ins.spend||0).toFixed(2) : '0.00';
+        return `<label style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px 32px;border-top:1px solid #f0f0f0;cursor:pointer;font-size:12px;color:#444;background:#fff">
+          <input type="checkbox" class="rep-adset-cb" data-cid="${cid}" data-id="${d.id}" ${isActive?'checked':''} style="accent-color:#F5A000;flex-shrink:0" onchange="syncCampCheck('${ck}')"/>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name}</span>
+          <span class="${isActive?'badge badge-active':'badge badge-paused'}" style="flex-shrink:0;font-size:9px">${isActive?'AKTYWNY':'WSTRZYM.'}</span>
+          <span style="color:#bbb;font-size:11px;flex-shrink:0">${spend} zł</span>
+        </label>`;
+      }).join('');
+
+      return `<div style="border-bottom:1px solid #eee">
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;background:#f5f3ee;font-size:12px;font-weight:700;color:#222">
+          <input type="checkbox" class="rep-camp-cb" id="rcb-${ck}" ${hasActive?'checked':''} style="accent-color:#F5A000" onchange="toggleCampAdsets('${ck}','${cid}',this.checked)"/>
+          <span style="flex:1">${camp.name}</span>
+          <span style="color:#999;font-weight:400;font-size:11px">${camp.items.length} zestawów</span>
+        </label>
+        <div id="rcamp-${ck}">${adsets}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function toggleCampAdsets(ck, cid, checked) {
+    document.querySelectorAll(`.rep-adset-cb[data-cid="${cid}"]`).forEach(cb => cb.checked = checked);
+  }
+
+  function syncCampCheck(ck) {
+    const campCb = document.getElementById('rcb-'+ck);
+    if (!campCb) return;
+    const adsetCbs = campCb.closest('div').querySelectorAll('.rep-adset-cb');
+    const anyChecked = [...adsetCbs].some(cb => cb.checked);
+    campCb.checked = anyChecked;
+    campCb.indeterminate = anyChecked && ![...adsetCbs].every(cb => cb.checked);
+  }
+
+  function repSelectAll(mode) {
+    document.querySelectorAll('.rep-adset-cb').forEach(cb => {
+      if (mode === 'active') cb.checked = cb.closest('label').querySelector('.badge-active') !== null;
+      else if (mode === 'all') cb.checked = true;
+      else cb.checked = false;
+    });
+    document.querySelectorAll('.rep-camp-cb').forEach(cb => {
+      const adsets = cb.closest('div').querySelectorAll('.rep-adset-cb');
+      cb.checked = [...adsets].some(a => a.checked);
+    });
   }
 
   function addGoogleRow(data={}) {
@@ -1338,9 +1493,9 @@
     if (!since || !until) { alert('Wybierz daty!'); return; }
 
     try {
-      const onlyActive = document.getElementById('repOnlyActive').checked;
-      const data = (allData || []).filter(d => !onlyActive || d.status === 'ACTIVE');
-      if (!data.length) { alert('Brak danych — najpierw załaduj dane Meta Ads na dashboardzie.'); return; }
+      const selectedIds = new Set([...document.querySelectorAll('.rep-adset-cb:checked')].map(cb => cb.dataset.id));
+      let data = (allData || []).filter(d => selectedIds.has(d.id));
+      if (!data.length) { alert('Zaznacz przynajmniej jeden zestaw reklam!'); return; }
       const html = buildReportHTML(data, title, since, until, []);
 
       if (mode === 'pdf') {
@@ -2156,6 +2311,134 @@ function switchTab(name,btn){
   handleGoogleCallback();
   const savedGToken = sessionStorage.getItem('g_token');
   if (savedGToken) { gToken = savedGToken; onGoogleConnected(); }
+
+  // ─── FIREBASE COMMENTS ───
+  const FB_URL = 'https://t2w-ads-dashboard-default-rtdb.europe-west1.firebasedatabase.app';
+  let currentCommentCid = null;
+  let currentCommentName = '';
+  let commentUnsubscribe = null;
+
+  const AVATAR_COLORS = ['#F5A000','#e53935','#1976D2','#2E7D32','#7B1FA2','#00838F'];
+  let myNick = localStorage.getItem('fb_nick') || '';
+  let myColor = localStorage.getItem('fb_color') || '#F5A000';
+
+  function initNickModal() {
+    if (!myNick) {
+      document.getElementById('nickModal').classList.add('visible');
+      // preselect color buttons
+      document.querySelectorAll('#nickColors span').forEach(s => {
+        s.classList.toggle('selected', s.dataset.color === myColor);
+        s.onclick = () => {
+          document.querySelectorAll('#nickColors span').forEach(x => x.classList.remove('selected'));
+          s.classList.add('selected');
+          myColor = s.dataset.color;
+        };
+      });
+    }
+  }
+
+  function saveNickname() {
+    const v = document.getElementById('nickInput').value.trim();
+    if (!v) { document.getElementById('nickInput').focus(); return; }
+    myNick = v;
+    localStorage.setItem('fb_nick', myNick);
+    localStorage.setItem('fb_color', myColor);
+    document.getElementById('nickModal').classList.remove('visible');
+  }
+
+  function openComments(cid, name) {
+    currentCommentCid = cid;
+    currentCommentName = name;
+    document.getElementById('commentPanelSub').textContent = name;
+    document.getElementById('commentOverlay').classList.add('visible');
+    document.getElementById('commentText').value = '';
+    listenComments(cid);
+    setTimeout(() => document.getElementById('commentText').focus(), 100);
+  }
+
+  function closeComments() {
+    document.getElementById('commentOverlay').classList.remove('visible');
+    if (commentUnsubscribe) { commentUnsubscribe(); commentUnsubscribe = null; }
+    currentCommentCid = null;
+  }
+
+  function listenComments(cid) {
+    if (commentUnsubscribe) commentUnsubscribe();
+    const key = cid.replace(/\W/g,'_');
+    const url = `${FB_URL}/comments/${key}.json`;
+    let es;
+    try {
+      es = new EventSource(url + '?accept=text/event-stream');
+      es.addEventListener('put', e => {
+        const data = JSON.parse(e.data);
+        renderComments(data.data);
+        updateCommentBadge(cid, data.data);
+      });
+      es.addEventListener('patch', e => {
+        const data = JSON.parse(e.data);
+        renderComments(null, data.data);
+      });
+      commentUnsubscribe = () => es.close();
+    } catch(err) {
+      // fallback: one-time fetch
+      fetch(url).then(r=>r.json()).then(d => { renderComments(d); updateCommentBadge(cid,d); }).catch(()=>{});
+    }
+  }
+
+  function renderComments(data) {
+    const list = document.getElementById('commentList');
+    if (!data) {
+      list.innerHTML = '<div class="comment-empty">Brak komentarzy.<br>Bądź pierwszy!</div>';
+      return;
+    }
+    const items = Object.values(data).sort((a,b) => a.ts - b.ts);
+    list.innerHTML = items.map(c => {
+      const initials = (c.nick||'?').slice(0,2).toUpperCase();
+      const color = c.color || '#F5A000';
+      const time = new Date(c.ts).toLocaleString('pl-PL', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      return `<div class="comment-item">
+        <div class="comment-meta">
+          <div class="comment-avatar" style="background:${color}">${initials}</div>
+          <span class="comment-author">${c.nick||'?'}</span>
+          <span class="comment-time">${time}</span>
+        </div>
+        <div class="comment-text">${c.text.replace(/</g,'&lt;')}</div>
+      </div>`;
+    }).join('');
+    list.scrollTop = list.scrollHeight;
+  }
+
+  function updateCommentBadge(cid, data) {
+    const btn = document.getElementById('cbtn-'+cid);
+    if (!btn) return;
+    const count = data ? Object.keys(data).length : 0;
+    btn.textContent = count > 0 ? `💬 ${count}` : '💬';
+    btn.classList.toggle('has-notes', count > 0);
+  }
+
+  async function sendComment() {
+    if (!myNick) { initNickModal(); return; }
+    const txt = document.getElementById('commentText').value.trim();
+    if (!txt || !currentCommentCid) return;
+    const key = currentCommentCid.replace(/\W/g,'_');
+    const payload = { nick: myNick, color: myColor, text: txt, ts: Date.now() };
+    try {
+      await fetch(`${FB_URL}/comments/${key}.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      document.getElementById('commentText').value = '';
+      document.getElementById('commentText').style.height = 'auto';
+      // refresh
+      const data = await fetch(`${FB_URL}/comments/${key}.json`).then(r=>r.json());
+      renderComments(data);
+      updateCommentBadge(currentCommentCid, data);
+    } catch(e) { alert('Błąd wysyłania komentarza'); }
+  }
+
+  // init nickname check after page loads
+  setTimeout(initNickModal, 800);
 </script>
 </body>
 </html>
