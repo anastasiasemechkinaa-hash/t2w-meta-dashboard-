@@ -1814,6 +1814,48 @@ function switchTab(name,btn){
     } catch(e) {}
   }
 
+  async function loadGoogleDataFromJSON() {
+    try {
+      const res = await fetch('google_data.json?t=' + Date.now());
+      if (!res.ok) return;
+      const json = await res.json();
+      const rows = json.this_month || [];
+      if (rows.length === 0) return;
+
+      document.getElementById('gTabBody').innerHTML = '';
+      document.getElementById('gTabEmpty').style.display = 'none';
+      document.getElementById('gTabTable').style.display = 'table';
+      document.getElementById('gConnectBar').style.display = 'none';
+      document.getElementById('gControlsLabel').textContent = `🔵 Dane z Google Analytics 4 · Aktualizacja: ${new Date(json.updated).toLocaleString('pl')}`;
+
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding:8px 12px;font-weight:600">${r.name}</td>
+          <td style="padding:8px 12px;color:#666">${r.channel||'SEARCH'}</td>
+          <td style="padding:8px 12px"><span class="st-active">AKTYWNA</span></td>
+          <td class="num" style="padding:8px 12px">—</td>
+          <td class="num" style="padding:8px 12px">${(r.views||0).toLocaleString('pl')}</td>
+          <td class="num" style="padding:8px 12px">${(r.sessions||0).toLocaleString('pl')}</td>
+          <td class="num" style="padding:8px 12px">—</td>
+          <td class="num" style="padding:8px 12px">—</td>
+          <td class="num" style="padding:8px 12px;color:#f98d07;font-weight:700">${r.conversions||'—'}</td>
+          <td class="num" style="padding:8px 12px">—</td>
+          <td></td>`;
+        document.getElementById('gTabBody').appendChild(tr);
+      });
+
+      // KPI
+      const totSessions = rows.reduce((s,r)=>s+(r.sessions||0),0);
+      const totViews    = rows.reduce((s,r)=>s+(r.views||0),0);
+      const totConv     = rows.reduce((s,r)=>s+(r.conversions||0),0);
+      document.getElementById('gCardImpr').textContent   = totViews.toLocaleString('pl');
+      document.getElementById('gCardClicks').textContent = totSessions.toLocaleString('pl');
+      document.getElementById('gCardConv').textContent   = totConv;
+
+    } catch(e) {}
+  }
+
   // ─── GOOGLE OAUTH ───
   const G_CLIENT_ID = '685746800714-qkfod61140f487emg9dgn5i1oo8e7uet.apps.googleusercontent.com';
   const G_PROPERTY_ID = '81715061';
@@ -1931,6 +1973,7 @@ function switchTab(name,btn){
 
   // ─── START ───
   if (getToken()) { init(); loadGoogleData(); }
+  loadGoogleDataFromJSON();
   handleGoogleCallback();
   const savedGToken = sessionStorage.getItem('g_token');
   if (savedGToken) { gToken = savedGToken; onGoogleConnected(); }
