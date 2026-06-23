@@ -1,0 +1,57 @@
+{
+  "updated": "2026-06-23T11:21:21.508315Z",
+  "this_month": [
+    {
+      "name": "EN oferty pracy",
+      "channel": "Paid Search",
+      "sessions": 133,
+      "views": 438,
+      "conversions": 6,
+      "users": 107
+    },
+    {
+      "name": "USŁ: PL: Sprzedaż Rekrutacji i Użyczenia",
+      "channel": "Paid Search",
+      "sessions": 79,
+      "views": 106,
+      "conversions": 4,
+      "users": 59
+    }
+  ],
+  "last_30d": [
+    {
+      "name": "EN oferty pracy",
+      "channel": "Paid Search",
+      "sessions": 187,
+      "views": 623,
+      "conversions": 9,
+      "users": 151
+    },
+    {
+      "name": "USŁ: PL: Sprzedaż Rekrutacji i Użyczenia",
+      "channel": "Paid Search",
+      "sessions": 107,
+      "views": 145,
+      "conversions": 4,
+      "users": 75
+    }
+  ],
+  "last_7d": [
+    {
+      "name": "EN oferty pracy",
+      "channel": "Paid Search",
+      "sessions": 34,
+      "views": 109,
+      "conversions": 2,
+      "users": 31
+    },
+    {
+      "name": "USŁ: PL: Sprzedaż Rekrutacji i Użyczenia",
+      "channel": "Paid Search",
+      "sessions": 28,
+      "views": 34,
+      "conversions": 0,
+      "users": 15
+    }
+  ]
+}

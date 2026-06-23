@@ -697,9 +697,24 @@
     </div>
   </div>
 
+  <!-- G CONNECT BAR -->
+  <div id="gConnectBar" style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <div style="font-weight:700;font-size:14px;color:#1e40af">🔵 Połącz z Google Analytics</div>
+      <div style="font-size:12px;color:#64748b;margin-top:3px">Dane kampanii Google Ads z GA4 — kliknij i zaloguj się przez Google</div>
+    </div>
+    <button id="gConnectBtn" onclick="connectGoogle()" style="padding:10px 22px;background:#4285f4;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+      🔑 Zaloguj przez Google
+    </button>
+    <button id="gDisconnectBtn" onclick="disconnectGoogle()" style="display:none;padding:10px 16px;background:transparent;color:#64748b;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;cursor:pointer">
+      Wyloguj Google
+    </button>
+    <div id="gConnectStatus" style="font-size:12px;color:#64748b"></div>
+  </div>
+
   <!-- G CONTROLS -->
   <div class="controls" style="margin-top:0">
-    <div style="font-size:13px;color:#666;flex:1">🔵 Dane Google Ads — wprowadź ręcznie lub połącz API</div>
+    <div style="font-size:13px;color:#666;flex:1" id="gControlsLabel">🔵 Dane Google Ads — wprowadź ręcznie</div>
     <button onclick="addGoogleTabRow()" style="padding:10px 18px;background:#F5A000;color:#111;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">+ Dodaj kampanię</button>
     <button onclick="saveGoogleData()" style="padding:10px 18px;background:#111;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Zapisz</button>
   </div>
@@ -1799,8 +1814,126 @@ function switchTab(name,btn){
     } catch(e) {}
   }
 
+  // ─── GOOGLE OAUTH ───
+  const G_CLIENT_ID = '685746800714-qkfod61140f487emg9dgn5i1oo8e7uet.apps.googleusercontent.com';
+  const G_PROPERTY_ID = '81715061';
+  const G_SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
+  let gToken = null;
+
+  function connectGoogle() {
+    const redirectUri = window.location.origin + window.location.pathname;
+    const url = `https://accounts.google.com/o/oauth2/v2/auth`
+      + `?client_id=${G_CLIENT_ID}`
+      + `&redirect_uri=${encodeURIComponent(redirectUri)}`
+      + `&response_type=token`
+      + `&scope=${encodeURIComponent(G_SCOPE)}`
+      + `&prompt=consent`;
+    window.location.href = url;
+  }
+
+  function disconnectGoogle() {
+    gToken = null;
+    sessionStorage.removeItem('g_token');
+    document.getElementById('gConnectBtn').style.display = '';
+    document.getElementById('gDisconnectBtn').style.display = 'none';
+    document.getElementById('gConnectStatus').textContent = '';
+    document.getElementById('gControlsLabel').textContent = '🔵 Dane Google Ads — wprowadź ręcznie';
+  }
+
+  function handleGoogleCallback() {
+    const hash = window.location.hash;
+    if (!hash.includes('access_token')) return;
+    const params = new URLSearchParams(hash.replace('#',''));
+    const token = params.get('access_token');
+    if (!token) return;
+    gToken = token;
+    sessionStorage.setItem('g_token', token);
+    window.history.replaceState(null, '', window.location.pathname);
+    onGoogleConnected();
+  }
+
+  function onGoogleConnected() {
+    document.getElementById('gConnectBtn').style.display = 'none';
+    document.getElementById('gDisconnectBtn').style.display = '';
+    document.getElementById('gConnectStatus').textContent = '✓ Połączono z Google';
+    document.getElementById('gControlsLabel').textContent = '🔵 Dane z Google Analytics 4 (na żywo)';
+    loadGoogleAnalyticsData();
+  }
+
+  async function loadGoogleAnalyticsData() {
+    if (!gToken) return;
+    const { since, until } = getDateRange(currentRange);
+    document.getElementById('gConnectStatus').textContent = '⏳ Pobieranie danych...';
+    try {
+      const res = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${G_PROPERTY_ID}:runReport`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${gToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dateRanges: [{ startDate: since, endDate: until }],
+          dimensions: [{ name: 'sessionCampaignName' }, { name: 'sessionSource' }],
+          metrics: [
+            { name: 'sessions' },
+            { name: 'screenPageViews' },
+            { name: 'conversions' },
+            { name: 'totalUsers' }
+          ],
+          dimensionFilter: {
+            filter: { fieldName: 'sessionSource', stringFilter: { matchType: 'CONTAINS', value: 'google' } }
+          },
+          limit: 50
+        })
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      renderGoogleAnalyticsData(json);
+      document.getElementById('gConnectStatus').textContent = '✓ Dane aktualne';
+    } catch(e) {
+      document.getElementById('gConnectStatus').textContent = '⚠ Błąd: ' + e.message;
+    }
+  }
+
+  function renderGoogleAnalyticsData(json) {
+    const tbody = document.getElementById('gTabBody');
+    tbody.innerHTML = '';
+    document.getElementById('gTabEmpty').style.display = 'none';
+    document.getElementById('gTabTable').style.display = 'table';
+
+    const rows = json.rows || [];
+    rows.forEach(row => {
+      const campaign = row.dimensionValues[0].value;
+      const source   = row.dimensionValues[1].value;
+      if (campaign === '(not set)' || campaign === '(direct)') return;
+      const sessions = parseInt(row.metricValues[0].value)||0;
+      const views    = parseInt(row.metricValues[1].value)||0;
+      const conv     = parseInt(row.metricValues[2].value)||0;
+      const users    = parseInt(row.metricValues[3].value)||0;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="padding:8px 12px;font-weight:600">${campaign}</td>
+        <td style="padding:8px 12px;color:#666">${source.toUpperCase()}</td>
+        <td style="padding:8px 12px"><span class="st-active">AKTYWNA</span></td>
+        <td class="num" style="padding:8px 12px">—</td>
+        <td class="num" style="padding:8px 12px">${views.toLocaleString('pl')}</td>
+        <td class="num" style="padding:8px 12px">${sessions.toLocaleString('pl')}</td>
+        <td class="num" style="padding:8px 12px">—</td>
+        <td class="num" style="padding:8px 12px">—</td>
+        <td class="num" style="padding:8px 12px;color:#f98d07;font-weight:700">${conv||'—'}</td>
+        <td class="num" style="padding:8px 12px">—</td>
+        <td></td>`;
+      tbody.appendChild(tr);
+    });
+
+    if (rows.length === 0) {
+      document.getElementById('gTabEmpty').style.display = 'block';
+      document.getElementById('gTabEmpty').innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">Brak danych Google Ads w GA4 dla tego okresu</div>';
+    }
+  }
+
   // ─── START ───
   if (getToken()) { init(); loadGoogleData(); }
+  handleGoogleCallback();
+  const savedGToken = sessionStorage.getItem('g_token');
+  if (savedGToken) { gToken = savedGToken; onGoogleConnected(); }
 </script>
 </body>
 </html>
