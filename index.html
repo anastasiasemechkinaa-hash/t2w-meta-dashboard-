@@ -1305,24 +1305,7 @@
     tbody.appendChild(tr);
   }
 
-  function getGoogleRows() {
-    const rows = [];
-    document.getElementById('gTableBody').querySelectorAll('tr').forEach(tr => {
-      const inputs = tr.querySelectorAll('input,select');
-      const name = inputs[0].value.trim();
-      if (!name) return;
-      rows.push({
-        name,
-        type: inputs[1].value,
-        status: inputs[2].value,
-        spend: parseFloat(inputs[3].value)||0,
-        impr: parseInt(inputs[4].value)||0,
-        clicks: parseInt(inputs[5].value)||0,
-        conv: parseInt(inputs[6].value)||0,
-      });
-    });
-    return rows;
-  }
+  function getGoogleRows() { return []; }
 
   function closeGenerateModal(e) {
     if (e.target === document.getElementById('generateModal'))
@@ -1742,6 +1725,7 @@ ${googleRows.length>0?`<div id="tab-google" class="tab-panel">${googleTab}</div>
   <strong>Time2Work — Raport Reklamowy ${title}</strong>
   <span>Wygenerowano: ${today} &nbsp;|&nbsp; Meta Ads API</span>
 </div>
+<script>
 function switchTab(name,btn){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -1786,26 +1770,50 @@ function switchTab(name,btn){
       <td style="padding:10px 14px;text-align:right">${(r.sessions||0).toLocaleString('pl')}</td>
       <td style="padding:10px 14px;text-align:right;color:#f59e0b;font-weight:700">${r.conversions||'—'}</td>
     </tr>`).join('');
-    const html = '<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8"><title>Raport Google Ads</title>'
-      + '<style>body{font-family:Arial,sans-serif;margin:0;padding:40px;color:#111}'
-      + 'h1{font-size:24px;margin-bottom:4px}p{color:#666;font-size:13px;margin-top:0}'
-      + '.kpis{display:flex;gap:16px;margin:24px 0}.kpi{flex:1;background:#f9f9f9;border-radius:10px;padding:16px;text-align:center}'
-      + '.kpi .val{font-size:28px;font-weight:800}.kpi .lbl{font-size:11px;color:#888;margin-top:4px}'
-      + 'table{width:100%;border-collapse:collapse;font-size:13px}thead tr{background:#111;color:#F5A000}'
-      + 'thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700}'
-      + 'tbody tr:nth-child(even){background:#f9f9f9}footer{margin-top:40px;font-size:11px;color:#aaa;text-align:center}'
+    const html = '<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">'
+      + '<title>Raport Google Ads – ' + periodLabel + '</title>'
+      + '<style>'
+      + '@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");'
+      + '*{box-sizing:border-box;margin:0;padding:0}'
+      + 'body{font-family:Inter,Arial,sans-serif;background:#f4f4f2;color:#111;min-height:100vh}'
+      + '.pdf-bar{background:#fff;padding:12px 40px;display:flex;gap:10px;align-items:center;border-bottom:2px solid #f0f0f0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.08)}'
+      + '.pdf-bar button{padding:9px 20px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}'
+      + '.btn-print{background:#F5A000;color:#111}.btn-close{background:#f0f0f0;color:#555}'
+      + '.pdf-bar span{font-size:11px;color:#aaa;margin-left:auto}'
+      + '.hero{background:#111;padding:32px 40px;display:flex;align-items:center;justify-content:space-between}'
+      + '.hero-logo{font-size:22px;font-weight:800;color:#F5A000;letter-spacing:1px}'
+      + '.hero-logo span{color:#fff}'
+      + '.hero-info{text-align:right;color:#aaa;font-size:12px;line-height:1.8}'
+      + '.hero-info strong{color:#fff;font-size:15px;display:block;margin-bottom:2px}'
+      + '.content{padding:32px 40px}'
+      + '.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}'
+      + '.kpi{background:#fff;border-radius:12px;padding:20px 24px;box-shadow:0 1px 4px rgba(0,0,0,.06)}'
+      + '.kpi .lbl{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}'
+      + '.kpi .val{font-size:32px;font-weight:800;color:#111}'
+      + '.kpi .sub{font-size:11px;color:#bbb;margin-top:4px}'
+      + 'table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}'
+      + 'thead tr{background:#111}thead th{padding:12px 16px;text-align:left;font-size:11px;font-weight:700;color:#F5A000;text-transform:uppercase;letter-spacing:.5px}'
+      + 'thead th.r{text-align:right}'
+      + 'tbody tr{border-bottom:1px solid #f5f5f5}tbody tr:last-child{border:none}'
+      + 'tbody tr:hover{background:#fafaf8}'
+      + 'tbody td{padding:12px 16px;font-size:13px}td.r{text-align:right}'
+      + '.badge-active{background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}'
+      + '.conv{color:#f59e0b;font-weight:800}'
+      + '.footer{margin-top:32px;text-align:center;font-size:11px;color:#aaa;padding-bottom:40px}'
+      + '@media print{.pdf-bar{display:none!important}body{background:#fff}.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}thead tr{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
       + '</style></head><body>'
-      + '<h1>Raport Google Ads</h1>'
-      + '<p>Okres: <strong>' + periodLabel + '</strong> | Aktualizacja: ' + updated + '</p>'
+      + '<div class="pdf-bar"><button class="btn-print" onclick="window.print()">🖨️ Drukuj / Zapisz jako PDF</button><button class="btn-close" onclick="window.close()">✕ Zamknij</button><span>Aby zapisać PDF: drukuj → Zapisz jako PDF</span></div>'
+      + '<div class="hero"><div class="hero-logo">t2w <span>Ads</span></div><div class="hero-info"><strong>Raport Google Ads</strong>Okres: ' + periodLabel + '<br>Wygenerowano: ' + new Date().toLocaleDateString('pl') + '<br>Aktualizacja danych: ' + updated + '</div></div>'
+      + '<div class="content">'
       + '<div class="kpis">'
-      + '<div class="kpi"><div class="val">' + tViews.toLocaleString('pl') + '</div><div class="lbl">Wyświetlenia</div></div>'
-      + '<div class="kpi"><div class="val">' + tSess.toLocaleString('pl') + '</div><div class="lbl">Sesje</div></div>'
-      + '<div class="kpi"><div class="val" style="color:#f59e0b">' + tConv + '</div><div class="lbl">Konwersje</div></div>'
+      + '<div class="kpi"><div class="lbl">Wyświetlenia</div><div class="val">' + tViews.toLocaleString('pl') + '</div><div class="sub">łącznie w okresie</div></div>'
+      + '<div class="kpi"><div class="lbl">Sesje</div><div class="val">' + tSess.toLocaleString('pl') + '</div><div class="sub">użytkownicy z Google</div></div>'
+      + '<div class="kpi"><div class="lbl">Konwersje</div><div class="val" style="color:#f59e0b">' + tConv + '</div><div class="sub">łącznie w okresie</div></div>'
       + '</div>'
-      + '<table><thead><tr><th>Kampania</th><th>Typ</th><th>Status</th><th style="text-align:right">Wyświetlenia</th><th style="text-align:right">Sesje</th><th style="text-align:right">Konwersje</th></tr></thead>'
+      + '<table><thead><tr><th>Kampania</th><th>Typ</th><th>Status</th><th class="r">Wyświetlenia</th><th class="r">Sesje</th><th class="r">Konwersje</th></tr></thead>'
       + '<tbody>' + rowsHtml + '</tbody></table>'
-      + '<footer>t2w Ads Dashboard · time2work · dane z Google Analytics 4</footer>'
-      + '</body></html>';
+      + '<div class="footer">t2w Ads Dashboard &nbsp;·&nbsp; <strong>time2work.pl</strong> &nbsp;·&nbsp; dane z Google Analytics 4</div>'
+      + '</div></body></html>';
     const blob = new Blob([html], {type:'text/html'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
