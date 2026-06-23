@@ -1742,69 +1742,6 @@ ${googleRows.length>0?`<div id="tab-google" class="tab-panel">${googleTab}</div>
   <strong>Time2Work — Raport Reklamowy ${title}</strong>
   <span>Wygenerowano: ${today} &nbsp;|&nbsp; Meta Ads API</span>
 </div>
-<script>
-function generateGoogleReport(){
-  if (!gJsonData) { alert('Brak danych Google Ads. Poczekaj na załadowanie.'); return; }
-  const activePeriodBtn = document.querySelector('#gDateRow .date-btn.active');
-  const periodLabel = activePeriodBtn ? activePeriodBtn.textContent : 'Ten miesiąc';
-  const activePeriod = activePeriodBtn?.id === 'gbtn-30d' ? 'last_30d' : activePeriodBtn?.id === 'gbtn-7d' ? 'last_7d' : 'this_month';
-  const rows = gJsonData[activePeriod] || [];
-  const updated = gJsonData.updated ? new Date(gJsonData.updated).toLocaleString('pl') : '—';
-
-  let tSess=0, tViews=0, tConv=0;
-  rows.forEach(r=>{ tSess+=r.sessions||0; tViews+=r.views||0; tConv+=r.conversions||0; });
-
-  const rowsHtml = rows.map(r=>`
-    <tr>
-      <td style="padding:10px 14px;font-weight:600">${r.name}</td>
-      <td style="padding:10px 14px;color:#666">${r.channel||'Paid Search'}</td>
-      <td style="padding:10px 14px"><span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">AKTYWNA</span></td>
-      <td style="padding:10px 14px;text-align:right">${(r.views||0).toLocaleString('pl')}</td>
-      <td style="padding:10px 14px;text-align:right">${(r.sessions||0).toLocaleString('pl')}</td>
-      <td style="padding:10px 14px;text-align:right;color:#f59e0b;font-weight:700">${r.conversions||'—'}</td>
-    </tr>`).join('');
-
-  const html = `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
-  <title>Raport Google Ads – ${periodLabel}</title>
-  <style>
-    body{font-family:Arial,sans-serif;margin:0;padding:40px;color:#111;background:#fff}
-    h1{font-size:24px;margin-bottom:4px}
-    p{color:#666;font-size:13px;margin-top:0}
-    .kpis{display:flex;gap:16px;margin:24px 0}
-    .kpi{flex:1;background:#f9f9f9;border-radius:10px;padding:16px;text-align:center}
-    .kpi .val{font-size:28px;font-weight:800;color:#111}
-    .kpi .lbl{font-size:11px;color:#888;margin-top:4px}
-    table{width:100%;border-collapse:collapse;font-size:13px}
-    thead tr{background:#111;color:#F5A000}
-    thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700}
-    tbody tr:nth-child(even){background:#f9f9f9}
-    footer{margin-top:40px;font-size:11px;color:#aaa;text-align:center}
-  </style></head><body>
-  <h1>📊 Raport Google Ads</h1>
-  <p>Okres: <strong>${periodLabel}</strong> &nbsp;|&nbsp; Aktualizacja danych: ${updated}</p>
-  <div class="kpis">
-    <div class="kpi"><div class="val">${tViews.toLocaleString('pl')}</div><div class="lbl">Wyświetlenia</div></div>
-    <div class="kpi"><div class="val">${tSess.toLocaleString('pl')}</div><div class="lbl">Sesje</div></div>
-    <div class="kpi"><div class="val" style="color:#f59e0b">${tConv}</div><div class="lbl">Konwersje</div></div>
-  </div>
-  <table><thead><tr><th>Kampania</th><th>Typ</th><th>Status</th><th style="text-align:right">Wyświetlenia</th><th style="text-align:right">Sesje</th><th style="text-align:right">Konwersje</th></tr></thead>
-  <tbody>${rowsHtml}</tbody></table>
-  <footer>t2w Ads Dashboard · time2work · dane z Google Analytics 4</footer>
-  </body></html>`;
-
-  const blob = new Blob([html], {type:'text/html'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `raport-google-${periodLabel.toLowerCase().replace(/ /g,'-')}.html`;
-  a.click();
-}
-function toggleCamp(key){
-  const rows = document.querySelectorAll('.camp-'+key);
-  const arr = document.getElementById('arr-'+key);
-  const hidden = rows.length && rows[0].style.display==='none';
-  rows.forEach(r => r.style.display = hidden ? '' : 'none');
-  if(arr) arr.textContent = hidden ? '▼' : '▶';
-}
 function switchTab(name,btn){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -1822,6 +1759,58 @@ function switchTab(name,btn){
     a.download = filename;
     a.click();
     URL.revokeObjectURL(a.href);
+  }
+
+  function toggleCamp(key){
+    const rows = document.querySelectorAll('.camp-'+key);
+    const arr = document.getElementById('arr-'+key);
+    const hidden = rows.length && rows[0].style.display==='none';
+    rows.forEach(r => r.style.display = hidden ? '' : 'none');
+    if(arr) arr.textContent = hidden ? '▼' : '▶';
+  }
+
+  function generateGoogleReport(){
+    if (!gJsonData) { alert('Brak danych Google Ads. Poczekaj na załadowanie.'); return; }
+    const activePeriodBtn = document.querySelector('#gDateRow .date-btn.active');
+    const periodLabel = activePeriodBtn ? activePeriodBtn.textContent : 'Ten miesiąc';
+    const activePeriod = activePeriodBtn?.id === 'gbtn-30d' ? 'last_30d' : activePeriodBtn?.id === 'gbtn-7d' ? 'last_7d' : 'this_month';
+    const rows = gJsonData[activePeriod] || [];
+    const updated = gJsonData.updated ? new Date(gJsonData.updated).toLocaleString('pl') : '—';
+    let tSess=0, tViews=0, tConv=0;
+    rows.forEach(r=>{ tSess+=r.sessions||0; tViews+=r.views||0; tConv+=r.conversions||0; });
+    const rowsHtml = rows.map(r=>`<tr>
+      <td style="padding:10px 14px;font-weight:600">${r.name}</td>
+      <td style="padding:10px 14px;color:#666">${r.channel||'Paid Search'}</td>
+      <td style="padding:10px 14px"><span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">AKTYWNA</span></td>
+      <td style="padding:10px 14px;text-align:right">${(r.views||0).toLocaleString('pl')}</td>
+      <td style="padding:10px 14px;text-align:right">${(r.sessions||0).toLocaleString('pl')}</td>
+      <td style="padding:10px 14px;text-align:right;color:#f59e0b;font-weight:700">${r.conversions||'—'}</td>
+    </tr>`).join('');
+    const html = '<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8"><title>Raport Google Ads</title>'
+      + '<style>body{font-family:Arial,sans-serif;margin:0;padding:40px;color:#111}'
+      + 'h1{font-size:24px;margin-bottom:4px}p{color:#666;font-size:13px;margin-top:0}'
+      + '.kpis{display:flex;gap:16px;margin:24px 0}.kpi{flex:1;background:#f9f9f9;border-radius:10px;padding:16px;text-align:center}'
+      + '.kpi .val{font-size:28px;font-weight:800}.kpi .lbl{font-size:11px;color:#888;margin-top:4px}'
+      + 'table{width:100%;border-collapse:collapse;font-size:13px}thead tr{background:#111;color:#F5A000}'
+      + 'thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700}'
+      + 'tbody tr:nth-child(even){background:#f9f9f9}footer{margin-top:40px;font-size:11px;color:#aaa;text-align:center}'
+      + '</style></head><body>'
+      + '<h1>Raport Google Ads</h1>'
+      + '<p>Okres: <strong>' + periodLabel + '</strong> | Aktualizacja: ' + updated + '</p>'
+      + '<div class="kpis">'
+      + '<div class="kpi"><div class="val">' + tViews.toLocaleString('pl') + '</div><div class="lbl">Wyświetlenia</div></div>'
+      + '<div class="kpi"><div class="val">' + tSess.toLocaleString('pl') + '</div><div class="lbl">Sesje</div></div>'
+      + '<div class="kpi"><div class="val" style="color:#f59e0b">' + tConv + '</div><div class="lbl">Konwersje</div></div>'
+      + '</div>'
+      + '<table><thead><tr><th>Kampania</th><th>Typ</th><th>Status</th><th style="text-align:right">Wyświetlenia</th><th style="text-align:right">Sesje</th><th style="text-align:right">Konwersje</th></tr></thead>'
+      + '<tbody>' + rowsHtml + '</tbody></table>'
+      + '<footer>t2w Ads Dashboard · time2work · dane z Google Analytics 4</footer>'
+      + '</body></html>';
+    const blob = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'raport-google-' + periodLabel.toLowerCase().replace(/ /g,'-') + '.html';
+    a.click();
   }
 
   // ─── GOOGLE ADS TAB ───
