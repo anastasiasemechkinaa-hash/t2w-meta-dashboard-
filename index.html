@@ -72,6 +72,48 @@
     .main { display: none; padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
     .main.visible { display: block; }
 
+    /* ─── MAIN TABS ─── */
+    .main-tabs {
+      background: #fff;
+      border-bottom: 2px solid #f0f0f0;
+      padding: 0 40px;
+      display: flex;
+      gap: 0;
+    }
+    .main-tab {
+      padding: 16px 28px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Open Sans', sans-serif;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      color: #888;
+      margin-bottom: -2px;
+      transition: color 0.15s, border-color 0.15s;
+      letter-spacing: 0.3px;
+    }
+    .main-tab:hover { color: #333; }
+    .main-tab.active { color: #F5A000; border-bottom-color: #F5A000; }
+
+    /* ─── GOOGLE ADS PANEL ─── */
+    .google-panel {
+      display: none;
+      padding: 32px 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .google-panel.visible { display: block; }
+    .google-coming-soon {
+      text-align: center;
+      padding: 80px 40px;
+      color: #aaa;
+    }
+    .google-coming-soon .icon { font-size: 48px; margin-bottom: 16px; }
+    .google-coming-soon h3 { font-size: 20px; font-weight: 700; color: #555; margin-bottom: 8px; }
+    .google-coming-soon p { font-size: 13px; line-height: 1.6; }
+
     /* ─── SEARCH + CONTROLS ─── */
     .controls {
       display: flex;
@@ -127,6 +169,20 @@
       cursor: pointer;
     }
     .btn-logout:hover { border-color: #ccc; color: #666; }
+    .btn-generate {
+      padding: 12px 20px;
+      background: #fff;
+      color: #F5A000;
+      border: 2px solid #F5A000;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-generate:hover { background: #FFF8E7; }
 
     /* ─── SUMMARY CARDS ─── */
     .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
@@ -288,12 +344,12 @@
 
     /* ─── ERROR ─── */
     .error-box {
-      background: #fff3cd;
-      border: 1px solid #ffc107;
+      background: #1a1a1a;
+      border: 1px solid #F5A000;
       border-radius: 10px;
       padding: 16px 20px;
       font-size: 13px;
-      color: #856404;
+      color: #fff;
       margin-bottom: 20px;
       display: none;
     }
@@ -453,6 +509,12 @@
   </div>
 </div>
 
+<!-- TABS -->
+<div class="main-tabs" id="mainTabs" style="display:none">
+  <button class="main-tab active" id="tab-meta" onclick="switchTab('meta')">Meta Ads</button>
+  <button class="main-tab" id="tab-google" onclick="switchTab('google')">Google Ads</button>
+</div>
+
 <!-- MAIN DASHBOARD -->
 <div class="main" id="mainDash">
 
@@ -471,6 +533,7 @@
       <span>—</span>
       <input type="date" id="dateTo" onchange="setCustomRange()"/>
     </div>
+    <button class="btn-generate" onclick="openGenerateModal()" style="margin-left:auto">📄 Generuj raport</button>
   </div>
 
   <!-- SUMMARY CARDS -->
@@ -515,6 +578,69 @@
     <button class="btn-logout" onclick="logout()">Wyloguj</button>
   </div>
 
+  <!-- GENERATE MODAL -->
+  <div class="modal-overlay" id="generateModal" onclick="closeGenerateModal(event)">
+    <div class="modal" style="max-width:480px">
+      <button class="modal-close" onclick="document.getElementById('generateModal').classList.remove('visible')">✕</button>
+      <div class="modal-title">📄 Generuj raport HTML</div>
+      <div class="modal-sub">Raport zostanie pobrany jako plik .html</div>
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px">Okres raportu</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="date" id="repFrom" style="padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:13px;flex:1;outline:none"/>
+            <span style="color:#aaa">—</span>
+            <input type="date" id="repTo" style="padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:13px;flex:1;outline:none"/>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px">Nazwa raportu</label>
+          <input type="text" id="repTitle" placeholder="np. Maj 2026" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none"/>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#444;cursor:pointer;background:#fff8ee;border:1px solid #fde68a;border-radius:8px;padding:10px 14px">
+          <input type="checkbox" id="repOnlyActive" checked style="accent-color:#F5A000;width:16px;height:16px;"/>
+          Tylko aktywne zestawy reklam w raporcie
+        </label>
+        <div id="repGoogleSection" style="background:#f9f9f9;border-radius:10px;padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:700;color:#555">🔵 Google Ads (opcjonalnie)</div>
+            <button onclick="addGoogleRow()" style="padding:5px 12px;background:#F5A000;color:#111;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">+ Dodaj kampanię</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:11px" id="gTable">
+              <thead>
+                <tr style="background:#e8e8e8">
+                  <th style="padding:6px 8px;text-align:left;font-size:10px">Kampania</th>
+                  <th style="padding:6px 8px;text-align:left;font-size:10px">Typ</th>
+                  <th style="padding:6px 8px;text-align:left;font-size:10px">Status</th>
+                  <th style="padding:6px 8px;text-align:right;font-size:10px">Wydatki</th>
+                  <th style="padding:6px 8px;text-align:right;font-size:10px">Wyśw.</th>
+                  <th style="padding:6px 8px;text-align:right;font-size:10px">Kliki</th>
+                  <th style="padding:6px 8px;text-align:right;font-size:10px">Konw.</th>
+                  <th style="padding:6px 4px"></th>
+                </tr>
+              </thead>
+              <tbody id="gTableBody"></tbody>
+            </table>
+          </div>
+          <div style="font-size:10px;color:#aaa;margin-top:8px">Zostaw puste jeśli nie masz danych Google Ads</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px">
+          <button onclick="generateReport('html')" style="flex:1;padding:14px;background:#F5A000;color:#111;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">
+            ⬇ Pobierz HTML
+          </button>
+          <button onclick="generateReport('pdf')" style="flex:1;padding:14px;background:#111;color:#F5A000;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">
+            🖨️ Otwórz do PDF
+          </button>
+        </div>
+        <div id="repLoader" style="display:none;text-align:center;color:#aaa;font-size:13px">
+          <div style="display:inline-block;width:24px;height:24px;border:3px solid #f0f0f0;border-top-color:#F5A000;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:8px;vertical-align:middle"></div>
+          Pobieranie danych...
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TABLE -->
   <div class="section-title">Zestawy reklam</div>
   <div class="table-wrap">
@@ -540,6 +666,82 @@
       </thead>
       <tbody id="tableBody"></tbody>
     </table>
+  </div>
+
+</div>
+
+<!-- GOOGLE ADS PANEL -->
+<div class="google-panel" id="googlePanel">
+
+  <!-- G KPI CARDS -->
+  <div class="cards" id="gKpiCards">
+    <div class="card accent">
+      <div class="c-label">Wydatki Google</div>
+      <div class="c-val" id="gCardSpend">—</div>
+      <div class="c-sub">łącznie w okresie</div>
+    </div>
+    <div class="card">
+      <div class="c-label">Wyświetlenia</div>
+      <div class="c-val" id="gCardImpr">—</div>
+      <div class="c-sub">CTR: <span id="gCardCtr">—</span></div>
+    </div>
+    <div class="card">
+      <div class="c-label">Kliknięcia</div>
+      <div class="c-val" id="gCardClicks">—</div>
+      <div class="c-sub">CPC: <span id="gCardCpc">—</span></div>
+    </div>
+    <div class="card">
+      <div class="c-label">Konwersje</div>
+      <div class="c-val" id="gCardConv">—</div>
+      <div class="c-sub">CPA: <span id="gCardCpa">—</span></div>
+    </div>
+  </div>
+
+  <!-- G CONTROLS -->
+  <div class="controls" style="margin-top:0">
+    <div style="font-size:13px;color:#666;flex:1">🔵 Dane Google Ads — wprowadź ręcznie lub połącz API</div>
+    <button onclick="addGoogleTabRow()" style="padding:10px 18px;background:#F5A000;color:#111;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">+ Dodaj kampanię</button>
+    <button onclick="saveGoogleData()" style="padding:10px 18px;background:#111;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Zapisz</button>
+  </div>
+
+  <!-- G TABLE -->
+  <div class="table-wrap">
+    <table id="gTabTable" style="display:table">
+      <thead>
+        <tr>
+          <th>Kampania</th>
+          <th>Typ</th>
+          <th>Status</th>
+          <th class="num">Wydatki (PLN)</th>
+          <th class="num">Wyświetlenia</th>
+          <th class="num">Kliknięcia</th>
+          <th class="num">CTR (%)</th>
+          <th class="num">CPC (PLN)</th>
+          <th class="num">Konwersje</th>
+          <th class="num">CPA (PLN)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="gTabBody"></tbody>
+      <tfoot id="gTabFoot" style="display:none">
+        <tr>
+          <td colspan="3"><strong>SUMA</strong></td>
+          <td class="num" id="gFootSpend">—</td>
+          <td class="num" id="gFootImpr">—</td>
+          <td class="num" id="gFootClicks">—</td>
+          <td class="num" id="gFootCtr">—</td>
+          <td class="num" id="gFootCpc">—</td>
+          <td class="num" id="gFootConv">—</td>
+          <td class="num" id="gFootCpa">—</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+    <div id="gTabEmpty" style="text-align:center;padding:60px 20px;color:#bbb">
+      <div style="font-size:40px;margin-bottom:12px">🔍</div>
+      <div style="font-weight:700;color:#888;margin-bottom:6px">Brak danych Google Ads</div>
+      <div style="font-size:12px">Kliknij „+ Dodaj kampanię" aby wpisać dane ręcznie</div>
+    </div>
   </div>
 
 </div>
@@ -586,11 +788,20 @@
 
   function getToken() { return localStorage.getItem('meta_token') || sessionStorage.getItem('meta_token'); }
 
+  // ─── TABS ───
+  function switchTab(tab) {
+    document.getElementById('tab-meta').classList.toggle('active', tab === 'meta');
+    document.getElementById('tab-google').classList.toggle('active', tab === 'google');
+    document.getElementById('mainDash').classList.toggle('visible', tab === 'meta');
+    document.getElementById('googlePanel').classList.toggle('visible', tab === 'google');
+  }
+
   // ─── INIT ───
   function init() {
     const token = getToken();
     if (!token) return;
     document.getElementById('tokenScreen').style.display = 'none';
+    document.getElementById('mainTabs').style.display = 'flex';
     document.getElementById('mainDash').classList.add('visible');
     document.getElementById('statusDot').classList.add('connected');
     document.getElementById('statusText').textContent = 'Połączono';
@@ -841,11 +1052,41 @@
   }
   function showError(msg) {
     const el = document.getElementById('errorBox');
-    el.textContent = msg;
+    const isExpired = msg.includes('Session has expired') || msg.includes('expired') || msg.includes('Invalid OAuth') || msg.includes('OAuthException') || msg.includes('access_token');
+    if (isExpired) {
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <strong>🔑 Token wygasł — potrzebny nowy</strong><br>
+            <span style="font-size:12px;opacity:0.85;">Tokeny z Graph API Explorer ważne ~1h. Pobierz długi token (60 dni).</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="https://developers.facebook.com/tools/explorer/" target="_blank"
+               style="background:#F5A000;color:#111;padding:9px 16px;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none;white-space:nowrap;">
+              1. Wygeneruj token →
+            </a>
+            <a href="https://developers.facebook.com/tools/debug/accesstoken/" target="_blank"
+               style="background:#fff;color:#111;padding:9px 16px;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none;white-space:nowrap;border:1px solid rgba(255,255,255,0.3);">
+              2. Przedłuż na 60 dni →
+            </a>
+            <button onclick="logoutAndRefresh()"
+               style="background:transparent;color:#fff;padding:9px 16px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;border:1px solid rgba(255,255,255,0.4);white-space:nowrap;">
+              3. Wklej nowy token
+            </button>
+          </div>
+        </div>`;
+    } else {
+      el.textContent = msg;
+    }
     el.classList.add('visible');
   }
   function hideError() {
     document.getElementById('errorBox').classList.remove('visible');
+  }
+  function logoutAndRefresh() {
+    localStorage.removeItem('meta_token');
+    sessionStorage.removeItem('meta_token');
+    location.reload();
   }
 
   // ─── MODAL ───
@@ -978,8 +1219,588 @@
     document.getElementById('adsGrid').innerHTML = '';
   }
 
+  // ─── GENERATE REPORT ───
+  function openGenerateModal() {
+    const { since, until } = getDateRange(currentRange);
+    document.getElementById('repFrom').value = since;
+    document.getElementById('repTo').value = until;
+    document.getElementById('repTitle').value = formatMonthTitle(since, until);
+    if (document.getElementById('gTableBody').children.length === 0) addGoogleRow();
+    document.getElementById('generateModal').classList.add('visible');
+  }
+
+  function addGoogleRow(data={}) {
+    const tbody = document.getElementById('gTableBody');
+    const inp = (val, ph, type='text', w='120px') =>
+      `<input type="${type}" value="${val||''}" placeholder="${ph}" style="width:${w};padding:5px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px"/>`;
+    const selType = ['SEARCH','DISPLAY','VIDEO','PMAX'].map(o=>`<option${o===(data.type||'SEARCH')?' selected':''}>${o}</option>`).join('');
+    const selStat = ['AKTYWNA','WSTRZYM.'].map(o=>`<option${o===(data.status||'AKTYWNA')?' selected':''}>${o}</option>`).join('');
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid #f0f0f0';
+    tr.innerHTML = `
+      <td style="padding:4px">${inp(data.name,'Nazwa kampanii','text','160px')}</td>
+      <td style="padding:4px"><select style="padding:5px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px">${selType}</select></td>
+      <td style="padding:4px"><select style="padding:5px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px">${selStat}</select></td>
+      <td style="padding:4px">${inp(data.spend,'0','number','70px')}</td>
+      <td style="padding:4px">${inp(data.impr,'0','number','70px')}</td>
+      <td style="padding:4px">${inp(data.clicks,'0','number','70px')}</td>
+      <td style="padding:4px">${inp(data.conv,'0','number','60px')}</td>
+      <td style="padding:4px"><button onclick="this.closest('tr').remove()" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:16px">✕</button></td>`;
+    tbody.appendChild(tr);
+  }
+
+  function getGoogleRows() {
+    const rows = [];
+    document.getElementById('gTableBody').querySelectorAll('tr').forEach(tr => {
+      const inputs = tr.querySelectorAll('input,select');
+      const name = inputs[0].value.trim();
+      if (!name) return;
+      rows.push({
+        name,
+        type: inputs[1].value,
+        status: inputs[2].value,
+        spend: parseFloat(inputs[3].value)||0,
+        impr: parseInt(inputs[4].value)||0,
+        clicks: parseInt(inputs[5].value)||0,
+        conv: parseInt(inputs[6].value)||0,
+      });
+    });
+    return rows;
+  }
+
+  function closeGenerateModal(e) {
+    if (e.target === document.getElementById('generateModal'))
+      document.getElementById('generateModal').classList.remove('visible');
+  }
+
+  function formatMonthTitle(since, until) {
+    const months = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+    const d = new Date(since);
+    return months[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  async function generateReport(mode='html') {
+    const token = getToken();
+    const since = document.getElementById('repFrom').value;
+    const until = document.getElementById('repTo').value;
+    const title = document.getElementById('repTitle').value || 'Raport';
+    if (!since || !until) { alert('Wybierz daty!'); return; }
+
+    document.getElementById('repLoader').style.display = 'block';
+
+    try {
+      const datePreset = `{"since":"${since}","until":"${until}"}`;
+      const fields = 'name,status,daily_budget,campaign_id,campaign{name}';
+      const insFields = 'spend,impressions,reach,clicks,inline_link_clicks,cpc,cpm,actions';
+      const url = `https://graph.facebook.com/v25.0/${AD_ACCOUNT_ID}/adsets`
+        + `?fields=${fields},insights.time_range(${encodeURIComponent(datePreset)}){${insFields}}`
+        + `&limit=200&access_token=${token}`;
+
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+
+      const onlyActive = document.getElementById('repOnlyActive').checked;
+      const data = (json.data || []).filter(d => !onlyActive || d.status === 'ACTIVE');
+      const googleRows = getGoogleRows();
+      const html = buildReportHTML(data, title, since, until, googleRows);
+
+      if (mode === 'pdf') {
+        const w = window.open('', '_blank');
+        w.document.write(html);
+        w.document.close();
+      } else {
+        downloadHTML(html, `raport-t2w-${since}-${until}.html`);
+      }
+    } catch(e) {
+      alert('Błąd: ' + e.message);
+    }
+    document.getElementById('repLoader').style.display = 'none';
+    document.getElementById('generateModal').classList.remove('visible');
+  }
+
+  function getIns(d) { return d.insights?.data?.[0] || null; }
+  function n(val) { return val ? parseFloat(val) : 0; }
+  function fmt(val, dec=2) { return val ? parseFloat(val).toFixed(dec).replace('.',',') : '—'; }
+  function fmtInt(val) { return val ? parseInt(val).toLocaleString('pl') : '—'; }
+  function getAct(ins, types) {
+    if (!ins?.actions) return 0;
+    return ins.actions.filter(a => types.some(t => a.action_type===t||a.action_type.includes(t))).reduce((s,a)=>s+parseInt(a.value||0),0);
+  }
+  function getLeadAct(ins) {
+    if (!ins?.actions) return 0;
+    return ins.actions.filter(a=>a.action_type==='offsite_conversion.custom.394526453102106'||a.action_type==='lead'||a.action_type==='onsite_conversion.lead_grouped').reduce((s,a)=>s+parseInt(a.value||0),0);
+  }
+  function getReactions(ins) {
+    if (!ins?.actions) return 0;
+    return ins.actions.filter(a=>a.action_type==='post_reaction').reduce((s,a)=>s+parseInt(a.value||0),0);
+  }
+  function getComments(ins) {
+    if (!ins?.actions) return 0;
+    return ins.actions.filter(a=>a.action_type==='comment').reduce((s,a)=>s+parseInt(a.value||0),0);
+  }
+  function getShares(ins) {
+    if (!ins?.actions) return 0;
+    return ins.actions.filter(a=>a.action_type==='post').reduce((s,a)=>s+parseInt(a.value||0),0);
+  }
+
+  function buildReportHTML(data, title, since, until, googleRows=[]) {
+    // Totals
+    let totSpend=0, totImpr=0, totReach=0, totClicks=0, totLinkClicks=0, totLeads=0, totCalls=0, totReact=0, totComm=0;
+    data.forEach(d => {
+      const ins = getIns(d);
+      if (!ins) return;
+      totSpend += n(ins.spend);
+      totImpr += n(ins.impressions);
+      totReach += n(ins.reach);
+      totClicks += n(ins.clicks);
+      totLinkClicks += n(ins.inline_link_clicks);
+      totLeads += getLeadAct(ins);
+      totCalls += getAct(ins, ['click_to_call_native_call_placed']);
+      totReact += getReactions(ins);
+      totComm += getComments(ins);
+    });
+    const totCPC = totClicks > 0 ? (totSpend/totClicks).toFixed(2).replace('.',',') : '—';
+    const totCPM = totImpr > 0 ? (totSpend/totImpr*1000).toFixed(2).replace('.',',') : '—';
+    const totCTR = totImpr > 0 ? (totClicks/totImpr*100).toFixed(2).replace('.',',') : '—';
+    const totFreq = totReach > 0 ? (totImpr/totReach).toFixed(2).replace('.',',') : '—';
+    const totCPAlead = totLeads > 0 ? (totSpend/totLeads).toFixed(2).replace('.',',') : '—';
+    const totCPAcall = totCalls > 0 ? (totSpend/totCalls).toFixed(2).replace('.',',') : '—';
+
+    // Group: Campaign → Adset (each adset IS one row — like a subfolder)
+    const campaigns = {};
+    data.forEach(d => {
+      const cn = d.campaign?.name || 'Bez kampanii';
+      const cid = d.campaign_id || cn;
+      if (!campaigns[cid]) campaigns[cid] = { name: cn, status: d.status, items: [] };
+      campaigns[cid].items.push(d);
+    });
+
+    // Build rows — Campaign as header, adsets as rows indented
+    let rows = '';
+    Object.values(campaigns).forEach(camp => {
+      // campaign subtotals
+      let cSpend=0,cImpr=0,cReach=0,cClicks=0,cLink=0,cLeads=0,cCalls=0,cReact=0,cComm=0;
+      camp.items.forEach(d => {
+        const ins = getIns(d);
+        if (!ins) return;
+        cSpend+=n(ins.spend); cImpr+=n(ins.impressions); cReach+=n(ins.reach);
+        cClicks+=n(ins.clicks); cLink+=n(ins.inline_link_clicks);
+        cLeads+=getLeadAct(ins); cCalls+=getAct(ins,['click_to_call_native_call_placed']);
+        cReact+=getReactions(ins); cComm+=getComments(ins);
+      });
+      const cCTR = cImpr>0?(cClicks/cImpr*100).toFixed(2).replace('.',','):'—';
+      const cCPC = cClicks>0?(cSpend/cClicks).toFixed(2).replace('.',','):'—';
+      const cCPM = cImpr>0?(cSpend/cImpr*1000).toFixed(2).replace('.',','):'—';
+      const cFreq = cReach>0?(cImpr/cReach).toFixed(2).replace('.',','):'—';
+      const cCPAlead = cLeads>0?(cSpend/cLeads).toFixed(2).replace('.',','):'—';
+
+      rows += `<tr class="group-campaign">
+        <td colspan="2"><strong>${camp.name}</strong> <span class="${camp.status==='ACTIVE'?'st-active':'st-paused'}">${camp.status==='ACTIVE'?'AKTYWNA':'WSTRZYM.'}</span></td>
+        <td class="num" style="color:white;font-weight:700">${cSpend.toFixed(2).replace('.',',')}</td>
+        <td class="num" style="color:white">${cImpr.toLocaleString('pl')}</td>
+        <td class="num" style="color:white">${cReach.toLocaleString('pl')}</td>
+        <td class="num" style="color:white">${cFreq}</td>
+        <td class="num" style="color:white">${cClicks.toLocaleString('pl')}</td>
+        <td class="num" style="color:white">${cLink.toLocaleString('pl')}</td>
+        <td class="num" style="color:white">${cCTR}</td>
+        <td class="num" style="color:white">${cCPC}</td>
+        <td class="num" style="color:white">${cCPM}</td>
+        <td class="num" style="color:white">${cCalls||'—'}</td>
+        <td class="num" style="color:white">${cReact||'—'}</td>
+        <td class="num" style="color:white">${cComm||'—'}</td>
+        <td class="num" style="color:#fbb040;font-weight:800">${cLeads||'—'}</td>
+        <td class="num" style="color:white">${cCPAlead}</td>
+      </tr>`;
+
+      camp.items.forEach(d => {
+        const ins = getIns(d);
+        const spend = ins ? n(ins.spend) : 0;
+        const impr = ins ? n(ins.impressions) : 0;
+        const reach = ins ? n(ins.reach) : 0;
+        const freq = reach>0 ? (impr/reach).toFixed(2).replace('.',',') : '—';
+        const clicks = ins ? n(ins.clicks) : 0;
+        const linkClicks = ins ? n(ins.inline_link_clicks) : 0;
+        const ctr = impr>0 ? (clicks/impr*100).toFixed(2).replace('.',',') : '—';
+        const cpc = clicks>0 ? (spend/clicks).toFixed(2).replace('.',',') : '—';
+        const cpm = impr>0 ? (spend/impr*1000).toFixed(2).replace('.',',') : '—';
+        const leads = getLeadAct(ins);
+        const calls = getAct(ins, ['click_to_call_native_call_placed']);
+        const react = getReactions(ins);
+        const comments = getComments(ins);
+        const cpaLead = leads>0 ? (spend/leads).toFixed(2).replace('.',',') : '—';
+        const freqWarn = parseFloat(freq)>5 ? 'color:#dc2626;font-weight:700' : '';
+        const statusBadge = d.status==='ACTIVE'
+          ? '<span class="st-active">AKT</span>'
+          : '<span class="st-paused">WSTR</span>';
+        rows += `<tr>
+          <td class="ad-name" style="padding-left:28px">↳ ${d.name}</td>
+          <td style="text-align:center">${statusBadge}</td>
+          <td class="num">${spend>0?spend.toFixed(2).replace('.',','):'—'}</td>
+          <td class="num">${fmtInt(ins?.impressions)}</td>
+          <td class="num">${fmtInt(ins?.reach)}</td>
+          <td class="num" style="${freqWarn}">${freq}</td>
+          <td class="num">${fmtInt(ins?.clicks)}</td>
+          <td class="num">${fmtInt(ins?.inline_link_clicks)}</td>
+          <td class="num">${ctr}</td>
+          <td class="num">${cpc}</td>
+          <td class="num">${cpm}</td>
+          <td class="num">${calls>0?calls:'—'}</td>
+          <td class="num">${react>0?react:'—'}</td>
+          <td class="num">${comments>0?comments:'—'}</td>
+          <td class="num" style="${leads>0?'color:#f98d07;font-weight:700':''}">${leads>0?leads:'—'}</td>
+          <td class="num">${cpaLead}</td>
+        </tr>`;
+      });
+    });
+
+    const today = new Date().toLocaleDateString('pl-PL');
+    const sinceDisp = new Date(since).toLocaleDateString('pl-PL');
+    const untilDisp = new Date(until).toLocaleDateString('pl-PL');
+
+    // Google tab
+    let gTotSpend=0, gTotImpr=0, gTotClicks=0, gTotConv=0;
+    googleRows.forEach(r => { gTotSpend+=r.spend; gTotImpr+=r.impr; gTotClicks+=r.clicks; gTotConv+=r.conv; });
+    const gTotCPC = gTotClicks>0?(gTotSpend/gTotClicks).toFixed(2).replace('.',','):'—';
+    const gTotCTR = gTotImpr>0?(gTotClicks/gTotImpr*100).toFixed(2).replace('.',','):'—';
+    const gTotCPA = gTotConv>0?(gTotSpend/gTotConv).toFixed(2).replace('.',','):'—';
+
+    let gRows = '';
+    googleRows.forEach(r => {
+      const cpc = r.clicks>0?(r.spend/r.clicks).toFixed(2).replace('.',','):'—';
+      const ctr = r.impr>0?(r.clicks/r.impr*100).toFixed(2).replace('.',','):'—';
+      const cpa = r.conv>0?(r.spend/r.conv).toFixed(2).replace('.',','):'—';
+      const cpaBad = r.conv>0 && r.spend/r.conv > 200;
+      const cpaGood = r.conv>0 && r.spend/r.conv < 30;
+      gRows += `<tr>
+        <td style="padding:7px 12px;font-weight:600">${r.name}</td>
+        <td style="padding:7px 12px;color:#666">${r.type}</td>
+        <td style="padding:7px 12px"><span class="${r.status==='AKTYWNA'?'st-active':'st-paused'}">${r.status}</span></td>
+        <td class="num">${r.spend>0?r.spend.toFixed(2).replace('.',','):'—'}</td>
+        <td class="num">${r.impr>0?r.impr.toLocaleString('pl'):'—'}</td>
+        <td class="num">${r.clicks>0?r.clicks.toLocaleString('pl'):'—'}</td>
+        <td class="num">${ctr}</td>
+        <td class="num">${cpc}</td>
+        <td class="num">${r.conv>0?r.conv:'—'}</td>
+        <td class="num" style="${cpaBad?'color:#dc2626;font-weight:700':cpaGood?'color:#16a34a;font-weight:700':''}">${cpa}</td>
+      </tr>`;
+    });
+
+    const googleTab = googleRows.length > 0 ? `
+      <div class="tab-kpi-row">
+        <div class="tab-kpi"><div class="k-label">Wydatki</div><div class="k-val">${gTotSpend.toFixed(2).replace('.',',')} zł</div></div>
+        <div class="tab-kpi"><div class="k-label">Wyświetlenia</div><div class="k-val">${gTotImpr.toLocaleString('pl')}</div><div class="k-sub">CTR ${gTotCTR}%</div></div>
+        <div class="tab-kpi"><div class="k-label">Kliknięcia</div><div class="k-val">${gTotClicks.toLocaleString('pl')}</div><div class="k-sub">CPC ${gTotCPC} zł</div></div>
+        <div class="tab-kpi"><div class="k-label">Konwersje</div><div class="k-val">${gTotConv}</div><div class="k-sub">CPA ${gTotCPA} zł</div></div>
+        <div class="tab-kpi"><div class="k-label">Kampanie</div><div class="k-val">${googleRows.length}</div><div class="k-sub">${googleRows.filter(r=>r.status==='AKTYWNA').length} aktywnych</div></div>
+      </div>
+      <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Kampania</th><th>Typ</th><th>Status</th>
+          <th class="num">Wydatki (PLN)</th><th class="num">Wyświetlenia</th>
+          <th class="num">Kliknięcia</th><th class="num">CTR (%)</th>
+          <th class="num">CPC (PLN)</th><th class="num">Konwersje</th>
+          <th class="num">CPA (PLN)</th>
+        </tr></thead>
+        <tbody>${gRows}</tbody>
+        <tfoot><tr>
+          <td colspan="3"><strong>SUMA</strong></td>
+          <td class="num">${gTotSpend.toFixed(2).replace('.',',')}</td>
+          <td class="num">${gTotImpr.toLocaleString('pl')}</td>
+          <td class="num">${gTotClicks.toLocaleString('pl')}</td>
+          <td class="num">${gTotCTR}</td>
+          <td class="num">${gTotCPC}</td>
+          <td class="num">${gTotConv}</td>
+          <td class="num">${gTotCPA}</td>
+        </tr></tfoot>
+      </table>
+      </div>` : `<div style="text-align:center;padding:60px;color:#aaa;font-size:14px">Brak danych Google Ads dla tego okresu</div>`;
+
+    return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time2Work — Raport Reklamowy — ${title}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --gold:#f98d07; --gold2:#fbb040; --dark:#1a1a1a; --mid:#444; --muted:#888; --bg:#f2f2f0; --green:#16a34a; --red:#dc2626; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--dark);font-size:13px;line-height:1.5}
+    .hero{background:linear-gradient(135deg,#111 0%,#1a1a1a 50%,#222 100%);padding:32px 40px 0;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;top:-100px;right:-60px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(249,141,7,0.28) 0%,transparent 65%);pointer-events:none}
+    .hero-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1}
+    .hero-title{text-align:right;color:white}
+    .hero-title h1{font-size:20px;font-weight:800;letter-spacing:-0.02em}
+    .hero-title p{font-size:11.5px;color:rgba(255,255,255,0.55);margin-top:3px}
+    .kpi-row{display:flex;gap:12px;padding:26px 0 0;position:relative;z-index:1;flex-wrap:wrap}
+    .kpi{flex:1;min-width:130px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:15px 18px;color:white}
+    .kpi .k-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold2);margin-bottom:6px}
+    .kpi .k-val{font-size:21px;font-weight:800;letter-spacing:-0.03em;line-height:1}
+    .kpi .k-sub{font-size:10px;color:rgba(255,255,255,0.45);margin-top:5px}
+    .stripe{background:linear-gradient(90deg,var(--gold) 0%,var(--gold2) 100%);height:4px}
+    .tabs-wrap{padding:24px 40px 0}
+    .tab-nav{display:flex;gap:4px;border-bottom:2px solid #d8d8d4}
+    .tab-btn{padding:10px 24px;font-size:12px;font-weight:600;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;border-radius:6px 6px 0 0}
+    .tab-btn.active{color:var(--dark);border-bottom-color:var(--gold);background:white}
+    .tab-panel{display:none}.tab-panel.active{display:block}
+    .tab-kpi-row{display:flex;gap:12px;flex-wrap:wrap;padding:20px 40px 4px}
+    .tab-kpi{background:white;border-radius:10px;padding:14px 20px;flex:1;min-width:120px;box-shadow:0 1px 6px rgba(0,0,0,0.07);border-top:3px solid var(--gold)}
+    .tab-kpi .k-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:4px}
+    .tab-kpi .k-val{font-size:19px;font-weight:800;color:var(--dark)}
+    .tab-kpi .k-sub{font-size:10px;color:var(--muted);margin-top:2px}
+    .table-wrap{padding:16px 40px 28px;overflow-x:auto}
+    table{width:100%;border-collapse:collapse;white-space:nowrap;background:white;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.07);overflow:hidden;font-size:11px}
+    thead th{background:var(--dark);color:white;padding:10px 12px;text-align:left;font-size:9.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
+    thead th.num{text-align:right}
+    tr.group-campaign td{background:#f5f5f2;color:var(--dark);font-size:11px;font-weight:700;padding:8px 14px;border-top:2px solid var(--gold)}
+    tbody tr{border-bottom:1px solid #eeeeea}
+    tbody tr:hover{background:#fffdf5}
+    tbody td{padding:7px 12px;vertical-align:middle}
+    td.num{text-align:right;font-variant-numeric:tabular-nums}
+    td.ad-name{padding-left:20px;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+    tfoot td{padding:10px 12px;font-size:11px;font-weight:700;background:var(--dark);color:white}
+    tfoot td.num{text-align:right}
+    .st-active{background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+    .st-paused{background:#f3f4f6;color:#6b7280;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+    .footer{background:var(--dark);color:rgba(255,255,255,0.55);padding:14px 40px;display:flex;justify-content:space-between;font-size:10px;margin-top:8px}
+    .footer strong{color:var(--gold2)}
+    .note{padding:4px 40px 24px;font-size:10px;color:var(--muted);line-height:1.9}
+    .pdf-bar{background:white;padding:12px 40px;display:flex;gap:10px;align-items:center;border-bottom:2px solid #f0f0f0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+    .pdf-btn{padding:9px 20px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
+    .pdf-btn-main{background:var(--gold);color:#111}
+    .pdf-btn-main:hover{background:#e08000}
+    .pdf-btn-sec{background:#f0f0f0;color:#555}
+    .pdf-btn-sec:hover{background:#e0e0e0}
+    .pdf-bar span{font-size:11px;color:#aaa;margin-left:auto}
+    @media print {
+      .pdf-bar,.tab-nav{display:none!important}
+      .tab-panel{display:block!important}
+      body{background:white}
+      .hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .stripe{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      thead tr{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      tr.group-campaign td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      tfoot td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .footer{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .kpi{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      table{page-break-inside:auto}
+      tr{page-break-inside:avoid}
+    }
+  </style>
+</head>
+<body>
+<div class="pdf-bar">
+  <button class="pdf-btn pdf-btn-main" onclick="window.print()">🖨️ Drukuj / Zapisz jako PDF</button>
+  <button class="pdf-btn pdf-btn-sec" onclick="window.close()">✕ Zamknij</button>
+  <span>Aby zapisać jako PDF: wybierz drukarkę „Zapisz jako PDF" lub „Microsoft Print to PDF"</span>
+</div>
+<div class="hero">
+  <div class="hero-top">
+    <div style="color:#F5A000;font-size:24px;font-weight:800;letter-spacing:1px">t2w <span style="color:#fff">Ads</span></div>
+    <div class="hero-title">
+      <h1>Time2Work — Raport Reklamowy</h1>
+      <p>${title} &nbsp;|&nbsp; ${sinceDisp} – ${untilDisp} &nbsp;|&nbsp; Meta Ads${gTotSpend>0?' + Google Ads':''}</p>
+    </div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="k-label">Łączne wydatki Meta</div><div class="k-val">${totSpend.toFixed(2).replace('.',',')} zł</div>${gTotSpend>0?`<div class="k-sub">+ Google ${gTotSpend.toFixed(2).replace('.',',')} zł</div>`:''}</div>
+    <div class="kpi"><div class="k-label">Wyświetlenia</div><div class="k-val">${totImpr.toLocaleString('pl')}</div><div class="k-sub">CPM ${totCPM} zł</div></div>
+    <div class="kpi"><div class="k-label">Zasięg</div><div class="k-val">${totReach.toLocaleString('pl')}</div><div class="k-sub">Częstotliwość ${totFreq}×</div></div>
+    <div class="kpi"><div class="k-label">Kliki</div><div class="k-val">${totClicks.toLocaleString('pl')}</div><div class="k-sub">CTR ${totCTR}% | CPC ${totCPC} zł</div></div>
+    <div class="kpi"><div class="k-label">Poł. tel.</div><div class="k-val">${totCalls}</div><div class="k-sub">CPA tel. ${totCPAcall} zł</div></div>
+    <div class="kpi"><div class="k-label">Aplikacje (Ev. A)</div><div class="k-val">${totLeads}</div><div class="k-sub">CPA ${totCPAlead} zł</div></div>
+  </div>
+  <div style="height:22px"></div>
+</div>
+<div class="stripe"></div>
+<div class="tabs-wrap">
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('meta',this)">Meta Ads</button>
+    ${googleRows.length>0?`<button class="tab-btn" onclick="switchTab('google',this)">Google Ads</button>`:''}
+  </div>
+</div>
+
+<div id="tab-meta" class="tab-panel active">
+<div class="tab-kpi-row">
+  <div class="tab-kpi"><div class="k-label">Wydatki</div><div class="k-val">${totSpend.toFixed(2).replace('.',',')} zł</div></div>
+  <div class="tab-kpi"><div class="k-label">Wyświetlenia</div><div class="k-val">${totImpr.toLocaleString('pl')}</div><div class="k-sub">CPM ${totCPM} zł</div></div>
+  <div class="tab-kpi"><div class="k-label">Zasięg</div><div class="k-val">${totReach.toLocaleString('pl')}</div><div class="k-sub">Częstotl. ${totFreq}×</div></div>
+  <div class="tab-kpi"><div class="k-label">Kliki</div><div class="k-val">${totClicks.toLocaleString('pl')}</div><div class="k-sub">CTR ${totCTR}% | CPC ${totCPC} zł</div></div>
+  <div class="tab-kpi"><div class="k-label">Poł. tel.</div><div class="k-val">${totCalls}</div><div class="k-sub">CPA ${totCPAcall} zł</div></div>
+  <div class="tab-kpi"><div class="k-label">Aplikacje</div><div class="k-val">${totLeads}</div><div class="k-sub">CPA ${totCPAlead} zł</div></div>
+</div>
+<div class="table-wrap">
+<table>
+  <thead><tr>
+    <th>Kampania / Zestaw reklam</th>
+    <th>Status</th>
+    <th class="num">Wydatki (PLN)</th>
+    <th class="num">Wyświetlenia</th>
+    <th class="num">Zasięg</th>
+    <th class="num">Częstotl.</th>
+    <th class="num">Kliki</th>
+    <th class="num">Kliki w link</th>
+    <th class="num">CTR (%)</th>
+    <th class="num">CPC (PLN)</th>
+    <th class="num">CPM (PLN)</th>
+    <th class="num">📞 Tel.</th>
+    <th class="num">Reakcje</th>
+    <th class="num">Koment.</th>
+    <th class="num">📋 Ev. A*</th>
+    <th class="num">CPA A (PLN)</th>
+  </tr></thead>
+  <tbody>${rows}</tbody>
+  <tfoot><tr>
+    <td><strong>SUMA</strong></td>
+    <td></td>
+    <td class="num">${totSpend.toFixed(2).replace('.',',')}</td>
+    <td class="num">${totImpr.toLocaleString('pl')}</td>
+    <td class="num">—</td>
+    <td class="num">${totFreq}</td>
+    <td class="num">${totClicks.toLocaleString('pl')}</td>
+    <td class="num">${totLinkClicks.toLocaleString('pl')}</td>
+    <td class="num">${totCTR}</td>
+    <td class="num">${totCPC}</td>
+    <td class="num">${totCPM}</td>
+    <td class="num">${totCalls||'—'}</td>
+    <td class="num">${totReact||'—'}</td>
+    <td class="num">${totComm||'—'}</td>
+    <td class="num" style="color:#fbb040">${totLeads||'—'}</td>
+    <td class="num">${totCPAlead}</td>
+  </tr></tfoot>
+</table>
+</div>
+<p class="note">* <strong>Ev. A</strong> = zdarzenie aplikacji do bazy kandydatów (offsite_conversion.custom.394526453102106) &nbsp;|&nbsp; Wygenerowano: ${today}</p>
+</div>
+
+${googleRows.length>0?`<div id="tab-google" class="tab-panel">${googleTab}</div>`:''}
+
+<div class="footer">
+  <strong>Time2Work — Raport Reklamowy ${title}</strong>
+  <span>Wygenerowano: ${today} &nbsp;|&nbsp; Meta Ads API</span>
+</div>
+<script>
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body></html>`;
+  }
+
+  function downloadHTML(html, filename) {
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // ─── GOOGLE ADS TAB ───
+  function addGoogleTabRow(data={}) {
+    const tbody = document.getElementById('gTabBody');
+    document.getElementById('gTabEmpty').style.display = 'none';
+    document.getElementById('gTabTable').style.display = 'table';
+    const inp = (val, ph, type='text', w='100%') =>
+      `<input type="${type}" value="${val}" placeholder="${ph}" style="width:${w};padding:6px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:12px;font-family:inherit" oninput="recalcGoogleTab()"/>`;
+    const sel = (val, opts) => `<select style="width:100%;padding:6px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:12px;font-family:inherit" onchange="recalcGoogleTab()">${opts.map(o=>`<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="padding:6px 8px;min-width:160px">${inp(data.name||'','Nazwa kampanii')}</td>
+      <td style="padding:6px 8px;min-width:90px">${sel(data.type||'SEARCH',['SEARCH','DISPLAY','VIDEO','PMAX'])}</td>
+      <td style="padding:6px 8px;min-width:100px">${sel(data.status||'AKTYWNA',['AKTYWNA','WSTRZYM.'])}</td>
+      <td style="padding:6px 8px;min-width:80px">${inp(data.spend||'','0','number','80px')}</td>
+      <td style="padding:6px 8px;min-width:80px">${inp(data.impr||'','0','number','80px')}</td>
+      <td style="padding:6px 8px;min-width:80px">${inp(data.clicks||'','0','number','80px')}</td>
+      <td style="padding:6px 8px;min-width:60px;color:#888;font-size:12px;text-align:right" class="ctr-cell">—</td>
+      <td style="padding:6px 8px;min-width:60px;color:#888;font-size:12px;text-align:right" class="cpc-cell">—</td>
+      <td style="padding:6px 8px;min-width:70px">${inp(data.conv||'','0','number','70px')}</td>
+      <td style="padding:6px 8px;min-width:60px;color:#888;font-size:12px;text-align:right" class="cpa-cell">—</td>
+      <td style="padding:6px 4px;text-align:center"><button onclick="this.closest('tr').remove();recalcGoogleTab()" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:18px;line-height:1">✕</button></td>`;
+    tbody.appendChild(tr);
+    recalcGoogleTab();
+  }
+
+  function recalcGoogleTab() {
+    const rows = document.getElementById('gTabBody').querySelectorAll('tr');
+    let totSpend=0, totImpr=0, totClicks=0, totConv=0;
+    rows.forEach(tr => {
+      const inputs = tr.querySelectorAll('input');
+      const spend = parseFloat(inputs[1]?.value)||0;
+      const impr  = parseInt(inputs[2]?.value)||0;
+      const clicks= parseInt(inputs[3]?.value)||0;
+      const conv  = parseInt(inputs[4]?.value)||0;
+      totSpend+=spend; totImpr+=impr; totClicks+=clicks; totConv+=conv;
+      const ctr = impr>0?(clicks/impr*100).toFixed(2)+'%':'—';
+      const cpc = clicks>0?(spend/clicks).toFixed(2)+' zł':'—';
+      const cpa = conv>0?(spend/conv).toFixed(2)+' zł':'—';
+      tr.querySelector('.ctr-cell').textContent = ctr;
+      tr.querySelector('.cpc-cell').textContent = cpc;
+      tr.querySelector('.cpa-cell').textContent = cpa;
+    });
+    // KPI cards
+    const fmt2 = v => v.toFixed(2).replace('.',',');
+    document.getElementById('gCardSpend').textContent  = totSpend>0 ? fmt2(totSpend)+' zł' : '—';
+    document.getElementById('gCardImpr').textContent   = totImpr>0  ? totImpr.toLocaleString('pl') : '—';
+    document.getElementById('gCardClicks').textContent = totClicks>0 ? totClicks.toLocaleString('pl') : '—';
+    document.getElementById('gCardConv').textContent   = totConv>0  ? totConv : '—';
+    document.getElementById('gCardCtr').textContent  = totImpr>0  ? (totClicks/totImpr*100).toFixed(2)+'%' : '—';
+    document.getElementById('gCardCpc').textContent  = totClicks>0 ? fmt2(totSpend/totClicks)+' zł' : '—';
+    document.getElementById('gCardCpa').textContent  = totConv>0  ? fmt2(totSpend/totConv)+' zł' : '—';
+    // Footer
+    if (rows.length > 0) {
+      document.getElementById('gTabFoot').style.display = '';
+      document.getElementById('gFootSpend').textContent  = totSpend>0 ? fmt2(totSpend) : '—';
+      document.getElementById('gFootImpr').textContent   = totImpr>0  ? totImpr.toLocaleString('pl') : '—';
+      document.getElementById('gFootClicks').textContent = totClicks.toLocaleString('pl');
+      document.getElementById('gFootCtr').textContent    = totImpr>0  ? (totClicks/totImpr*100).toFixed(2) : '—';
+      document.getElementById('gFootCpc').textContent    = totClicks>0 ? fmt2(totSpend/totClicks) : '—';
+      document.getElementById('gFootConv').textContent   = totConv;
+      document.getElementById('gFootCpa').textContent    = totConv>0  ? fmt2(totSpend/totConv) : '—';
+    }
+  }
+
+  function saveGoogleData() {
+    const rows = document.getElementById('gTabBody').querySelectorAll('tr');
+    const data = [];
+    rows.forEach(tr => {
+      const sels = tr.querySelectorAll('select');
+      const inputs = tr.querySelectorAll('input');
+      const name = inputs[0]?.value.trim();
+      if (!name) return;
+      data.push({ name, type: sels[0]?.value, status: sels[1]?.value,
+        spend: inputs[1]?.value, impr: inputs[2]?.value,
+        clicks: inputs[3]?.value, conv: inputs[4]?.value });
+    });
+    localStorage.setItem('google_ads_data', JSON.stringify(data));
+    const btn = event.target;
+    btn.textContent = '✓ Zapisano'; btn.style.background = '#4CAF50';
+    setTimeout(() => { btn.textContent = '💾 Zapisz'; btn.style.background = '#111'; }, 2000);
+    // sync to generate modal
+    syncGoogleToModal(data);
+  }
+
+  function syncGoogleToModal(data) {
+    const tbody = document.getElementById('gTableBody');
+    tbody.innerHTML = '';
+    data.forEach(r => addGoogleRow(r));
+  }
+
+  function loadGoogleData() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('google_ads_data') || '[]');
+      saved.forEach(r => addGoogleTabRow(r));
+      syncGoogleToModal(saved);
+    } catch(e) {}
+  }
+
   // ─── START ───
-  if (getToken()) init();
+  if (getToken()) { init(); loadGoogleData(); }
 </script>
 </body>
 </html>
