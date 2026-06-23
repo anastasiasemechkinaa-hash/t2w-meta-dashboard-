@@ -601,30 +601,6 @@
           <input type="checkbox" id="repOnlyActive" checked style="accent-color:#F5A000;width:16px;height:16px;"/>
           Tylko aktywne zestawy reklam w raporcie
         </label>
-        <div id="repGoogleSection" style="background:#f9f9f9;border-radius:10px;padding:16px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:12px;font-weight:700;color:#555">🔵 Google Ads (opcjonalnie)</div>
-            <button onclick="addGoogleRow()" style="padding:5px 12px;background:#F5A000;color:#111;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">+ Dodaj kampanię</button>
-          </div>
-          <div style="overflow-x:auto">
-            <table style="width:100%;border-collapse:collapse;font-size:11px" id="gTable">
-              <thead>
-                <tr style="background:#e8e8e8">
-                  <th style="padding:6px 8px;text-align:left;font-size:10px">Kampania</th>
-                  <th style="padding:6px 8px;text-align:left;font-size:10px">Typ</th>
-                  <th style="padding:6px 8px;text-align:left;font-size:10px">Status</th>
-                  <th style="padding:6px 8px;text-align:right;font-size:10px">Wydatki</th>
-                  <th style="padding:6px 8px;text-align:right;font-size:10px">Wyśw.</th>
-                  <th style="padding:6px 8px;text-align:right;font-size:10px">Kliki</th>
-                  <th style="padding:6px 8px;text-align:right;font-size:10px">Konw.</th>
-                  <th style="padding:6px 4px"></th>
-                </tr>
-              </thead>
-              <tbody id="gTableBody"></tbody>
-            </table>
-          </div>
-          <div style="font-size:10px;color:#aaa;margin-top:8px">Zostaw puste jeśli nie masz danych Google Ads</div>
-        </div>
         <div style="display:flex;gap:10px;margin-top:4px">
           <button onclick="generateReport('html')" style="flex:1;padding:14px;background:#F5A000;color:#111;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">
             ⬇ Pobierz HTML
@@ -724,6 +700,7 @@
     <div style="font-size:13px;color:#666;flex:1" id="gControlsLabel">🔵 Dane Google Ads — wprowadź ręcznie</div>
     <button onclick="addGoogleTabRow()" style="padding:10px 18px;background:#F5A000;color:#111;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">+ Dodaj kampanię</button>
     <button onclick="saveGoogleData()" style="padding:10px 18px;background:#111;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Zapisz</button>
+    <button onclick="generateGoogleReport()" style="padding:10px 18px;background:#111;color:#F5A000;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📄 Generuj raport</button>
   </div>
 
   <!-- G TABLE -->
@@ -1475,8 +1452,8 @@
       const cCPAlead = cLeads>0?(cSpend/cLeads).toFixed(2).replace('.',','):'—';
 
       const campKey = cid.replace(/\W/g,'_');
-      rows += `<tr class="group-campaign" onclick="toggleCamp('${campKey}')" style="cursor:pointer">
-        <td colspan="2"><span class="camp-arrow" id="arr-${campKey}">▶</span> <strong>${camp.name}</strong> <span class="${camp.status==='ACTIVE'?'st-active':'st-paused'}">${camp.status==='ACTIVE'?'AKTYWNA':'WSTRZYM.'}</span></td>
+      rows += `<tr class="group-campaign" onclick="(function(k){var rs=document.querySelectorAll('.cr-'+k),ar=document.getElementById('ra-'+k),h=rs.length&&rs[0].style.display==='none';rs.forEach(r=>r.style.display=h?'':'none');if(ar)ar.textContent=h?'▼':'▶';})('${campKey}')" style="cursor:pointer">
+        <td colspan="2"><span class="camp-arrow" id="ra-${campKey}">▶</span> <strong>${camp.name}</strong> <span class="${camp.status==='ACTIVE'?'st-active':'st-paused'}">${camp.status==='ACTIVE'?'AKTYWNA':'WSTRZYM.'}</span></td>
         <td class="num" style="color:white;font-weight:700">${cSpend.toFixed(2).replace('.',',')}</td>
         <td class="num" style="color:white">${cImpr.toLocaleString('pl')}</td>
         <td class="num" style="color:white">${cReach.toLocaleString('pl')}</td>
@@ -1513,7 +1490,7 @@
         const statusBadge = d.status==='ACTIVE'
           ? '<span class="st-active">AKT</span>'
           : '<span class="st-paused">WSTR</span>';
-        rows += `<tr class="camp-row camp-${campKey}" style="display:none">
+        rows += `<tr class="cr-${campKey}" style="display:none">
           <td class="ad-name" style="padding-left:28px">↳ ${d.name}</td>
           <td style="text-align:center">${statusBadge}</td>
           <td class="num">${spend>0?spend.toFixed(2).replace('.',','):'—'}</td>
@@ -1766,6 +1743,61 @@ ${googleRows.length>0?`<div id="tab-google" class="tab-panel">${googleTab}</div>
   <span>Wygenerowano: ${today} &nbsp;|&nbsp; Meta Ads API</span>
 </div>
 <script>
+function generateGoogleReport(){
+  if (!gJsonData) { alert('Brak danych Google Ads. Poczekaj na załadowanie.'); return; }
+  const activePeriodBtn = document.querySelector('#gDateRow .date-btn.active');
+  const periodLabel = activePeriodBtn ? activePeriodBtn.textContent : 'Ten miesiąc';
+  const activePeriod = activePeriodBtn?.id === 'gbtn-30d' ? 'last_30d' : activePeriodBtn?.id === 'gbtn-7d' ? 'last_7d' : 'this_month';
+  const rows = gJsonData[activePeriod] || [];
+  const updated = gJsonData.updated ? new Date(gJsonData.updated).toLocaleString('pl') : '—';
+
+  let tSess=0, tViews=0, tConv=0;
+  rows.forEach(r=>{ tSess+=r.sessions||0; tViews+=r.views||0; tConv+=r.conversions||0; });
+
+  const rowsHtml = rows.map(r=>`
+    <tr>
+      <td style="padding:10px 14px;font-weight:600">${r.name}</td>
+      <td style="padding:10px 14px;color:#666">${r.channel||'Paid Search'}</td>
+      <td style="padding:10px 14px"><span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">AKTYWNA</span></td>
+      <td style="padding:10px 14px;text-align:right">${(r.views||0).toLocaleString('pl')}</td>
+      <td style="padding:10px 14px;text-align:right">${(r.sessions||0).toLocaleString('pl')}</td>
+      <td style="padding:10px 14px;text-align:right;color:#f59e0b;font-weight:700">${r.conversions||'—'}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
+  <title>Raport Google Ads – ${periodLabel}</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;padding:40px;color:#111;background:#fff}
+    h1{font-size:24px;margin-bottom:4px}
+    p{color:#666;font-size:13px;margin-top:0}
+    .kpis{display:flex;gap:16px;margin:24px 0}
+    .kpi{flex:1;background:#f9f9f9;border-radius:10px;padding:16px;text-align:center}
+    .kpi .val{font-size:28px;font-weight:800;color:#111}
+    .kpi .lbl{font-size:11px;color:#888;margin-top:4px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead tr{background:#111;color:#F5A000}
+    thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700}
+    tbody tr:nth-child(even){background:#f9f9f9}
+    footer{margin-top:40px;font-size:11px;color:#aaa;text-align:center}
+  </style></head><body>
+  <h1>📊 Raport Google Ads</h1>
+  <p>Okres: <strong>${periodLabel}</strong> &nbsp;|&nbsp; Aktualizacja danych: ${updated}</p>
+  <div class="kpis">
+    <div class="kpi"><div class="val">${tViews.toLocaleString('pl')}</div><div class="lbl">Wyświetlenia</div></div>
+    <div class="kpi"><div class="val">${tSess.toLocaleString('pl')}</div><div class="lbl">Sesje</div></div>
+    <div class="kpi"><div class="val" style="color:#f59e0b">${tConv}</div><div class="lbl">Konwersje</div></div>
+  </div>
+  <table><thead><tr><th>Kampania</th><th>Typ</th><th>Status</th><th style="text-align:right">Wyświetlenia</th><th style="text-align:right">Sesje</th><th style="text-align:right">Konwersje</th></tr></thead>
+  <tbody>${rowsHtml}</tbody></table>
+  <footer>t2w Ads Dashboard · time2work · dane z Google Analytics 4</footer>
+  </body></html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `raport-google-${periodLabel.toLowerCase().replace(/ /g,'-')}.html`;
+  a.click();
+}
 function toggleCamp(key){
   const rows = document.querySelectorAll('.camp-'+key);
   const arr = document.getElementById('arr-'+key);
