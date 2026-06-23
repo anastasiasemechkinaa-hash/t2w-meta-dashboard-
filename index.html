@@ -1457,7 +1457,7 @@
 
     // Build rows — Campaign as header, adsets as rows indented
     let rows = '';
-    Object.values(campaigns).forEach(camp => {
+    Object.entries(campaigns).forEach(([cid, camp]) => {
       // campaign subtotals
       let cSpend=0,cImpr=0,cReach=0,cClicks=0,cLink=0,cLeads=0,cCalls=0,cReact=0,cComm=0;
       camp.items.forEach(d => {
