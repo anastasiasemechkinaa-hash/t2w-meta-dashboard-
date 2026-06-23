@@ -1,57 +1,81 @@
 {
-  "updated": "2026-06-23T11:21:21.508315Z",
+  "updated": "2026-06-23T12:53:40.959597Z",
   "this_month": [
-    {
-      "name": "EN oferty pracy",
-      "channel": "Paid Search",
-      "sessions": 133,
-      "views": 438,
-      "conversions": 6,
-      "users": 107
-    },
     {
       "name": "USŁ: PL: Sprzedaż Rekrutacji i Użyczenia",
       "channel": "Paid Search",
       "sessions": 79,
       "views": 106,
       "conversions": 4,
-      "users": 59
-    }
-  ],
-  "last_30d": [
+      "users": 59,
+      "cost": 690.67,
+      "clicks": 111,
+      "impressions": 752,
+      "adgroups": []
+    },
     {
       "name": "EN oferty pracy",
       "channel": "Paid Search",
-      "sessions": 187,
-      "views": 623,
-      "conversions": 9,
-      "users": 151
-    },
+      "sessions": 133,
+      "views": 438,
+      "conversions": 6,
+      "users": 107,
+      "cost": 161.94,
+      "clicks": 209,
+      "impressions": 911,
+      "adgroups": []
+    }
+  ],
+  "last_30d": [
     {
       "name": "USŁ: PL: Sprzedaż Rekrutacji i Użyczenia",
       "channel": "Paid Search",
       "sessions": 107,
       "views": 145,
       "conversions": 4,
-      "users": 75
-    }
-  ],
-  "last_7d": [
+      "users": 75,
+      "cost": 880.06,
+      "clicks": 142,
+      "impressions": 1034,
+      "adgroups": []
+    },
     {
       "name": "EN oferty pracy",
       "channel": "Paid Search",
-      "sessions": 34,
-      "views": 109,
-      "conversions": 2,
-      "users": 31
-    },
+      "sessions": 187,
+      "views": 623,
+      "conversions": 9,
+      "users": 151,
+      "cost": 229.59,
+      "clicks": 293,
+      "impressions": 1312,
+      "adgroups": []
+    }
+  ],
+  "last_7d": [
     {
       "name": "USŁ: PL: Sprzedaż Rekrutacji i Użyczenia",
       "channel": "Paid Search",
       "sessions": 28,
       "views": 34,
       "conversions": 0,
-      "users": 15
+      "users": 15,
+      "cost": 238.57,
+      "clicks": 34,
+      "impressions": 225,
+      "adgroups": []
+    },
+    {
+      "name": "EN oferty pracy",
+      "channel": "Paid Search",
+      "sessions": 34,
+      "views": 109,
+      "conversions": 2,
+      "users": 31,
+      "cost": 52.66,
+      "clicks": 61,
+      "impressions": 292,
+      "adgroups": []
     }
   ]
 }

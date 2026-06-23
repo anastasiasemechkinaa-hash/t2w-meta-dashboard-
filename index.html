@@ -1592,7 +1592,7 @@
     table{width:100%;border-collapse:collapse;white-space:nowrap;background:white;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.07);overflow:hidden;font-size:11px}
     thead th{background:var(--dark);color:white;padding:10px 12px;text-align:left;font-size:9.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
     thead th.num{text-align:right}
-    tr.group-campaign td{background:#f5f5f2;color:var(--dark);font-size:11px;font-weight:700;padding:8px 14px;border-top:2px solid var(--gold)}
+    tr.group-campaign td{background:#f5f5f2;color:#111 !important;font-size:11px;font-weight:700;padding:8px 14px;border-top:2px solid var(--gold)}
     tr.group-campaign:hover td{background:#ede8df}
     tr.camp-header-row td{background:#f5f3ee;font-weight:700;border-top:2px solid #f0c060}
     tr.camp-header-row:hover td{background:#ece8df}
@@ -1753,6 +1753,14 @@ function switchTab(name,btn){
     const hidden = rows.length && rows[0].style.display==='none';
     rows.forEach(r => r.style.display = hidden ? '' : 'none');
     if(arr) arr.textContent = hidden ? '▼' : '▶';
+  }
+
+  function toggleGCamp(key) {
+    const rows = document.querySelectorAll('.gcamp-row-'+key);
+    const arr = document.getElementById('garr-'+key);
+    const hidden = rows.length && rows[0].style.display === 'none';
+    rows.forEach(r => r.style.display = hidden ? '' : 'none');
+    if (arr) arr.textContent = hidden ? '▼' : '▶';
   }
 
   function saveGSpend(input) {
@@ -1950,36 +1958,68 @@ function switchTab(name,btn){
     document.getElementById('gTabBody').innerHTML = '';
     document.getElementById('gTabEmpty').style.display = rows.length === 0 ? 'block' : 'none';
     document.getElementById('gTabTable').style.display = rows.length === 0 ? 'none' : 'table';
-    const gSpends = JSON.parse(localStorage.getItem('g_spends')||'{}');
-    rows.forEach(r => {
-      const saved = gSpends[r.name] || '';
-      const spend = parseFloat(saved) || 0;
-      const cpa = spend > 0 && r.conversions > 0 ? (spend/r.conversions).toFixed(2)+' zł' : '—';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td style="padding:8px 12px;font-weight:600">${r.name}</td>
+    rows.forEach((r, i) => {
+      const cost = r.cost || 0;
+      const ctr  = r.impressions > 0 ? (r.clicks/r.impressions*100).toFixed(2) : '—';
+      const cpc  = r.clicks > 0 ? (cost/r.clicks).toFixed(2) : '—';
+      const cpa  = cost > 0 && r.conversions > 0 ? (cost/r.conversions).toFixed(2) : '—';
+      const hasGroups = r.adgroups && r.adgroups.length > 0;
+      const key = 'g'+i;
+
+      const campTr = document.createElement('tr');
+      campTr.style.cssText = 'background:#f5f3ee;font-weight:700;border-top:2px solid #f0c060;cursor:pointer';
+      campTr.onclick = hasGroups ? () => toggleGCamp(key) : null;
+      campTr.innerHTML = `
+        <td style="padding:8px 12px;font-weight:700">
+          ${hasGroups ? `<span id="garr-${key}" style="font-size:10px;color:#888;margin-right:4px">▶</span>` : ''}
+          ${r.name}
+        </td>
         <td style="padding:8px 12px;color:#666">${r.channel||'Paid Search'}</td>
         <td style="padding:8px 12px"><span class="st-active">AKTYWNA</span></td>
-        <td class="num" style="padding:8px 12px">
-          <input type="number" value="${saved}" placeholder="wpisz" data-camp="${r.name}"
-            style="width:80px;border:1px solid #e0e0e0;border-radius:6px;padding:3px 6px;font-size:12px;text-align:right;font-family:inherit"
-            onchange="saveGSpend(this)" title="Kliknij aby wpisać wydatki ręcznie"/>
-        </td>
+        <td class="num" style="padding:8px 12px;color:#f98d07;font-weight:800">${cost > 0 ? cost.toLocaleString('pl', {minimumFractionDigits:2}) : '—'}</td>
         <td class="num" style="padding:8px 12px">${(r.views||0).toLocaleString('pl')}</td>
-        <td class="num" style="padding:8px 12px">${(r.sessions||0).toLocaleString('pl')}</td>
-        <td class="num" style="padding:8px 12px">—</td>
-        <td class="num" style="padding:8px 12px">—</td>
+        <td class="num" style="padding:8px 12px">${(r.clicks||0).toLocaleString('pl')}</td>
+        <td class="num" style="padding:8px 12px">${ctr}</td>
+        <td class="num" style="padding:8px 12px">${cpc}</td>
         <td class="num" style="padding:8px 12px;color:#f98d07;font-weight:700">${r.conversions||'—'}</td>
         <td class="num" style="padding:8px 12px">${cpa}</td>
         <td></td>`;
-      document.getElementById('gTabBody').appendChild(tr);
+      document.getElementById('gTabBody').appendChild(campTr);
+
+      if (hasGroups) {
+        r.adgroups.forEach(ag => {
+          const agCtr = ag.impressions > 0 ? (ag.clicks/ag.impressions*100).toFixed(2) : '—';
+          const agCpc = ag.clicks > 0 ? (ag.cost/ag.clicks).toFixed(2) : '—';
+          const agCpa = ag.cost > 0 && ag.conversions > 0 ? (ag.cost/ag.conversions).toFixed(2) : '—';
+          const agTr = document.createElement('tr');
+          agTr.className = 'gcamp-row-'+key;
+          agTr.style.display = 'none';
+          agTr.style.background = '#fafaf8';
+          agTr.innerHTML = `
+            <td style="padding:7px 12px 7px 28px;border-left:3px solid #f0c060;color:#444;font-size:12px">↳ ${ag.name}</td>
+            <td style="padding:7px 12px;color:#888;font-size:12px">Grupa</td>
+            <td style="padding:7px 12px"><span class="st-active" style="font-size:9px">AKT</span></td>
+            <td class="num" style="padding:7px 12px;font-size:12px">${ag.cost > 0 ? ag.cost.toLocaleString('pl', {minimumFractionDigits:2}) : '—'}</td>
+            <td class="num" style="padding:7px 12px;font-size:12px">${(ag.views||0).toLocaleString('pl')}</td>
+            <td class="num" style="padding:7px 12px;font-size:12px">${(ag.clicks||0).toLocaleString('pl')}</td>
+            <td class="num" style="padding:7px 12px;font-size:12px">${agCtr}</td>
+            <td class="num" style="padding:7px 12px;font-size:12px">${agCpc}</td>
+            <td class="num" style="padding:7px 12px;font-size:12px;color:#f98d07;font-weight:700">${ag.conversions||'—'}</td>
+            <td class="num" style="padding:7px 12px;font-size:12px">${agCpa}</td>
+            <td></td>`;
+          document.getElementById('gTabBody').appendChild(agTr);
+        });
+      }
     });
     const totViews = rows.reduce((s,r)=>s+(r.views||0),0);
     const totSess  = rows.reduce((s,r)=>s+(r.sessions||0),0);
     const totConv  = rows.reduce((s,r)=>s+(r.conversions||0),0);
+    const totCost  = rows.reduce((s,r)=>s+(r.cost||0),0);
     document.getElementById('gCardImpr').textContent   = totViews.toLocaleString('pl');
     document.getElementById('gCardClicks').textContent = totSess.toLocaleString('pl');
     document.getElementById('gCardConv').textContent   = totConv;
+    const costEl = document.getElementById('gCardSpend');
+    if (costEl) costEl.textContent = totCost > 0 ? totCost.toLocaleString('pl',{minimumFractionDigits:2})+' zł' : '—';
   }
 
   async function loadGoogleDataFromJSON() {
