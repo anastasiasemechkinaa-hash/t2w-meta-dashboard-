@@ -522,7 +522,10 @@
     .comment-author { font-size:12px; font-weight:700; }
     .comment-time { font-size:10px; color:#bbb; margin-left:auto; }
     .comment-text { font-size:13px; color:#333; line-height:1.4; }
-    .comment-input-area { padding:12px 16px; border-top:1px solid #eee; display:flex; gap:8px; align-items:flex-end; }
+    .quick-replies { padding:8px 16px 0; display:flex; flex-wrap:wrap; gap:5px; }
+    .qr-chip { background:#f5f3ee; border:1px solid #e8e4dc; border-radius:20px; padding:4px 11px; font-size:11px; color:#555; cursor:pointer; transition:all .15s; white-space:nowrap; }
+    .qr-chip:hover { background:#fff3d0; border-color:#F5A000; color:#c67000; }
+    .comment-input-area { padding:8px 16px 12px; border-top:1px solid #eee; display:flex; gap:8px; align-items:flex-end; }
     .comment-input-area textarea { flex:1; border:1px solid #ddd; border-radius:8px; padding:8px 10px; font-size:13px; font-family:inherit; resize:none; outline:none; min-height:38px; max-height:100px; }
     .comment-input-area textarea:focus { border-color:#F5A000; }
     .comment-send { background:#F5A000; color:#111; border:none; border-radius:8px; padding:8px 14px; font-weight:800; font-size:13px; cursor:pointer; }
@@ -791,6 +794,7 @@
   <div class="gchat-messages" id="gchatMessages">
     <div style="text-align:center;padding:40px;color:#bbb;font-size:13px">Ładowanie wiadomości...</div>
   </div>
+  <div class="quick-replies" id="gchatQuickReplies"></div>
   <div class="gchat-input-area">
     <textarea id="gchatText" placeholder="Napisz wiadomość ogólną..." rows="1"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGlobalMessage()}"
@@ -841,6 +845,7 @@
     <div class="comment-list" id="commentList">
       <div class="comment-empty">Brak komentarzy.<br>Bądź pierwszy!</div>
     </div>
+    <div class="quick-replies" id="commentQuickReplies"></div>
     <div class="comment-input-area">
       <textarea id="commentText" placeholder="Napisz komentarz..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendComment()}" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
       <button class="comment-send" onclick="sendComment()">Wyślij</button>
@@ -1252,7 +1257,7 @@
           <td class="num">${cpc}</td>
           <td style="text-align:center">${leads>0?`<span class="num" style="color:#1976D2">${leads}</span>`:'<span class="muted">—</span>'}</td>
           <td style="text-align:center">${calls>0?`<span class="num" style="color:#2E7D32">${calls}</span>`:'<span class="muted">—</span>'}</td>
-          <td></td>`;
+          <td style="text-align:center"><button class="btn-comment" id="cbtn-${d.id}" onclick="event.stopPropagation();openComments('${d.id}','${d.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">💬</button></td>`;
         tbody.appendChild(tr);
       });
     });
@@ -2651,6 +2656,7 @@ function switchTab(name,btn){
     document.getElementById('commentPanelSub').textContent = name;
     document.getElementById('commentOverlay').classList.add('visible');
     document.getElementById('commentText').value = '';
+    buildQuickReplies('commentQuickReplies', 'commentText');
     listenComments(cid);
     setTimeout(() => document.getElementById('commentText').focus(), 100);
   }
@@ -2719,7 +2725,7 @@ function switchTab(name,btn){
     const txt = document.getElementById('commentText').value.trim();
     if (!txt || !currentCommentCid) return;
     const key = currentCommentCid.replace(/\W/g,'_');
-    const payload = { nick: myNick, emoji: myEmoji, text: txt, ts: Date.now() };
+    const payload = { nick: myNick, emoji: myEmoji, text: txt, ts: Date.now(), adsetName: currentCommentName };
     try {
       await fetch(`${FB_URL}/comments/${key}.json`, {
         method: 'POST',
@@ -2737,6 +2743,34 @@ function switchTab(name,btn){
     } catch(e) { alert('Błąd wysyłania komentarza'); }
   }
 
+  // ─── QUICK REPLIES ───
+  const QUICK_REPLIES = [
+    'Zmiana budżetu na ',
+    'Wyłączenie',
+    'Włączenie',
+    'Wyłączona ✓',
+    'Włączona ✓',
+    'Zmienione ✓',
+  ];
+
+  function buildQuickReplies(containerId, textareaId) {
+    const box = document.getElementById(containerId);
+    if (!box) return;
+    box.innerHTML = QUICK_REPLIES.map(r =>
+      `<span class="qr-chip" onclick="insertQuickReply('${r.replace(/'/g,"\\'")}','${textareaId}')">${r}</span>`
+    ).join('');
+  }
+
+  function insertQuickReply(text, textareaId) {
+    const ta = document.getElementById(textareaId);
+    if (!ta) return;
+    ta.value = text;
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  }
+
   // ─── GLOBAL CHAT ───
   let gchatOpen = false;
   let lastReadTs = parseInt(localStorage.getItem('lastReadTs') || '0');
@@ -2749,6 +2783,7 @@ function switchTab(name,btn){
     document.getElementById('gchatOverlay').classList.toggle('visible', gchatOpen);
     if (gchatOpen) {
       loadGchat();
+      buildQuickReplies('gchatQuickReplies', 'gchatText');
       setTimeout(() => document.getElementById('gchatText').focus(), 200);
     } else {
       // mark all as read
@@ -2818,7 +2853,7 @@ function switchTab(name,btn){
       const time = new Date(m.ts).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' });
       const emoji = m.emoji || '🦊';
       const newBadge = isNew ? '<span class="gchat-bubble-new">NOWE</span>' : '';
-      const ctx = m.type === 'comment' ? `<div class="gchat-bubble-ctx">📁 komentarz do zestawu</div>` : '';
+      const ctx = m.type === 'comment' ? `<div class="gchat-bubble-ctx" style="font-size:11px;color:#999;margin-top:4px">📁 <strong style="color:#666">${(m.adsetName||'zestaw reklam').replace(/</g,'&lt;')}</strong></div>` : '';
 
       html += `<div class="gchat-msg${isMine ? ' mine' : ''}">
         <div class="gchat-avatar">${emoji}</div>
