@@ -843,6 +843,7 @@
       <h3>💬 Czat & Powiadomienia</h3>
       <p>Komentarze do zestawów + wiadomości ogólne</p>
     </div>
+    <button onclick="changeProfile()" title="Zmień profil" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 6px;border-radius:8px;color:#fff;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='none'">✏️</button>
     <button class="gchat-close" onclick="toggleGlobalChat()">✕</button>
   </div>
   <div class="gchat-messages" id="gchatMessages">
@@ -2708,6 +2709,13 @@ function switchTab(name,btn){
         };
       });
     }
+  }
+
+  function changeProfile() {
+    const modal = document.getElementById('nickModal');
+    document.getElementById('nickInput').value = myNick;
+    modal.querySelectorAll('.nick-emoji-option').forEach(s => s.classList.toggle('selected', s.dataset.emoji === myEmoji));
+    modal.classList.add('visible');
   }
 
   function saveNickname() {
