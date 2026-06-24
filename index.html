@@ -479,8 +479,10 @@
       .btn-refresh, .btn-logout { font-size: 12px; padding: 8px 12px; }
 
       /* table — horizontal scroll */
-      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
       #adsTable { min-width: 600px; }
+      .table-scroll-bar { display:block; overflow-x:auto; overflow-y:hidden; position:sticky; bottom:0; background:#fff; border-top:1px solid #eee; z-index:10; }
+      .table-scroll-inner { height:1px; }
       thead th, tbody td { padding: 8px 10px; font-size: 11px; }
 
       /* selection bar */
@@ -626,6 +628,7 @@
       🔔
       <span class="bell-badge" id="bellBadge" style="display:none">0</span>
     </button>
+    <button class="bell-btn" id="pushBtn" onclick="enablePush()" title="Włącz powiadomienia push" style="font-size:16px;display:none">🔕</button>
     <div class="status-dot" id="statusDot"></div>
     <div class="status-text" id="statusText">Niepołączono</div>
   </div>
@@ -807,6 +810,7 @@
       <div class="spin"></div><br/>Pobieranie danych z Meta Ads...
     </div>
     <div class="empty" id="emptyMsg" style="display:none">Brak wyników dla podanej frazy.</div>
+    <div class="table-scroll-bar" id="tableScrollBar"><div class="table-scroll-inner" id="tableScrollInner"></div></div>
     <table id="adsTable" style="display:none">
       <thead>
         <tr>
@@ -3016,13 +3020,42 @@ function switchTab(name,btn){
   // ─── BROWSER PUSH NOTIFICATIONS ───
   let pushPermission = localStorage.getItem('pushPermission') || 'default';
 
-  async function requestPushPermission() {
-    if (!('Notification' in window)) return;
-    if (Notification.permission === 'granted') { pushPermission = 'granted'; return; }
-    if (Notification.permission === 'denied') { pushPermission = 'denied'; return; }
+  function updatePushBtn() {
+    const btn = document.getElementById('pushBtn');
+    if (!btn || !('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+      btn.style.display = 'none';
+    } else if (Notification.permission === 'denied') {
+      btn.title = 'Powiadomienia zablokowane w przeglądarce';
+      btn.textContent = '🔕';
+      btn.style.display = '';
+    } else {
+      btn.title = 'Kliknij, aby włączyć powiadomienia push';
+      btn.textContent = '🔔❓';
+      btn.style.display = '';
+    }
+  }
+
+  async function enablePush() {
+    if (!('Notification' in window)) { alert('Ta przeglądarka nie obsługuje powiadomień.'); return; }
+    if (Notification.permission === 'denied') {
+      alert('Powiadomienia są zablokowane w Firefoksie.\n\nIdź do: Ustawienia → Prywatność i bezpieczeństwo → Uprawnienia → Powiadomienia → Ustawienia\nZnajdź ten adres URL i zmień na "Zezwalaj".');
+      return;
+    }
     const result = await Notification.requestPermission();
     pushPermission = result;
     localStorage.setItem('pushPermission', result);
+    updatePushBtn();
+    if (result === 'granted') {
+      showPushNotification('✅ Powiadomienia włączone!', 'Będziesz otrzymywać alerty o nowych komentarzach.');
+    }
+  }
+
+  async function requestPushPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') { pushPermission = 'granted'; updatePushBtn(); return; }
+    if (Notification.permission === 'denied') { pushPermission = 'denied'; updatePushBtn(); return; }
+    updatePushBtn();
   }
 
   function showPushNotification(title, body, icon) {
@@ -3068,9 +3101,27 @@ function switchTab(name,btn){
     } catch(e) {}
   }, 30000);
 
+  // ─── SYNC TABLE SCROLLBAR ───
+  function initTableScrollSync() {
+    const wrap = document.querySelector('.table-wrap');
+    const bar  = document.getElementById('tableScrollBar');
+    const inner = document.getElementById('tableScrollInner');
+    const table = document.getElementById('adsTable');
+    if (!wrap || !bar || !inner || !table) return;
+    inner.style.width = table.scrollWidth + 'px';
+    bar.style.width = wrap.clientWidth + 'px';
+    wrap.addEventListener('scroll', () => { bar.scrollLeft = wrap.scrollLeft; });
+    bar.addEventListener('scroll', () => { wrap.scrollLeft = bar.scrollLeft; });
+    new ResizeObserver(() => {
+      inner.style.width = table.scrollWidth + 'px';
+      bar.style.width = wrap.clientWidth + 'px';
+    }).observe(table);
+  }
+  setTimeout(initTableScrollSync, 1000);
+
   // init nickname check after page loads
   setTimeout(initNickModal, 800);
-  setTimeout(requestPushPermission, 2000);
+  setTimeout(() => { requestPushPermission(); updatePushBtn(); }, 1000);
 </script>
 </body>
 </html>
