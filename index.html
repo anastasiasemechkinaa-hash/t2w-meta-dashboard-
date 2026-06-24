@@ -2970,6 +2970,32 @@ function switchTab(name,btn){
     } catch(e) { alert('Błąd wysyłania'); }
   }
 
+  // ─── BROWSER PUSH NOTIFICATIONS ───
+  let pushPermission = localStorage.getItem('pushPermission') || 'default';
+
+  async function requestPushPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') { pushPermission = 'granted'; return; }
+    if (Notification.permission === 'denied') { pushPermission = 'denied'; return; }
+    const result = await Notification.requestPermission();
+    pushPermission = result;
+    localStorage.setItem('pushPermission', result);
+  }
+
+  function showPushNotification(title, body, icon) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (document.visibilityState === 'visible' && gchatOpen) return; // nie pokazuj jeśli czat otwarty
+    const n = new Notification(title, {
+      body,
+      icon: icon || 'https://t2w-ads-dashboard.web.app/favicon.ico',
+      badge: icon || '',
+      tag: 't2w-dashboard',
+      renotify: true,
+    });
+    n.onclick = () => { window.focus(); toggleGlobalChat(); n.close(); };
+    setTimeout(() => n.close(), 8000);
+  }
+
   // poll for unread every 30s even when chat closed
   setInterval(async () => {
     if (gchatOpen) return;
@@ -2983,12 +3009,25 @@ function switchTab(name,btn){
       if (commentsRaw) Object.entries(commentsRaw).forEach(([k, cs]) => {
         if (cs) Object.values(cs).forEach(c => msgs.push({ ...c, type: 'comment', adsetKey: k }));
       });
+
+      // find truly new messages (newer than lastReadTs, not mine)
+      const newMsgs = msgs.filter(m => m.ts > lastReadTs && m.nick !== myNick);
+      if (newMsgs.length > 0) {
+        const latest = newMsgs[newMsgs.length - 1];
+        const title = `${latest.emoji || '💬'} ${latest.nick}`;
+        const body = latest.type === 'comment'
+          ? `📁 ${latest.adsetName || 'zestaw'}: ${latest.text}`
+          : latest.text;
+        showPushNotification(title, body);
+      }
+
       updateUnread(msgs);
     } catch(e) {}
   }, 30000);
 
   // init nickname check after page loads
   setTimeout(initNickModal, 800);
+  setTimeout(requestPushPermission, 2000);
 </script>
 </body>
 </html>
