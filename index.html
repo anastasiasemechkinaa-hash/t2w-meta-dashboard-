@@ -525,6 +525,13 @@
     .quick-replies { padding:8px 16px 0; display:flex; flex-wrap:wrap; gap:5px; }
     .qr-chip { background:#f5f3ee; border:1px solid #e8e4dc; border-radius:20px; padding:4px 11px; font-size:11px; color:#555; cursor:pointer; transition:all .15s; white-space:nowrap; }
     .qr-chip:hover { background:#fff3d0; border-color:#F5A000; color:#c67000; }
+    .emoji-btn { background:none; border:none; font-size:18px; cursor:pointer; padding:4px 6px; border-radius:6px; transition:background .15s; flex-shrink:0; }
+    .emoji-btn:hover { background:#f0f0f0; }
+    .emoji-popup { position:absolute; bottom:calc(100% + 6px); right:0; background:#fff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,.12); padding:10px; display:none; z-index:300; width:220px; }
+    .emoji-popup.visible { display:block; }
+    .emoji-grid { display:flex; flex-wrap:wrap; gap:4px; }
+    .emoji-grid span { font-size:20px; cursor:pointer; padding:3px; border-radius:6px; transition:background .1s; }
+    .emoji-grid span:hover { background:#f5f5f5; }
     .comment-input-area { padding:8px 16px 12px; border-top:1px solid #eee; display:flex; gap:8px; align-items:flex-end; }
     .comment-input-area textarea { flex:1; border:1px solid #ddd; border-radius:8px; padding:8px 10px; font-size:13px; font-family:inherit; resize:none; outline:none; min-height:38px; max-height:100px; }
     .comment-input-area textarea:focus { border-color:#F5A000; }
@@ -795,7 +802,13 @@
     <div style="text-align:center;padding:40px;color:#bbb;font-size:13px">Ładowanie wiadomości...</div>
   </div>
   <div class="quick-replies" id="gchatQuickReplies"></div>
-  <div class="gchat-input-area">
+  <div class="gchat-input-area" style="position:relative">
+    <div style="position:relative">
+      <button class="emoji-btn" onclick="toggleEmojiPopup('gchatEmojiPopup')">😊</button>
+      <div class="emoji-popup" id="gchatEmojiPopup">
+        <div class="emoji-grid" id="gchatEmojiGrid"></div>
+      </div>
+    </div>
     <textarea id="gchatText" placeholder="Napisz wiadomość ogólną..." rows="1"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGlobalMessage()}"
       oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
@@ -846,7 +859,13 @@
       <div class="comment-empty">Brak komentarzy.<br>Bądź pierwszy!</div>
     </div>
     <div class="quick-replies" id="commentQuickReplies"></div>
-    <div class="comment-input-area">
+    <div class="comment-input-area" style="position:relative">
+      <div style="position:relative">
+        <button class="emoji-btn" onclick="toggleEmojiPopup('commentEmojiPopup')">😊</button>
+        <div class="emoji-popup" id="commentEmojiPopup">
+          <div class="emoji-grid" id="commentEmojiGrid"></div>
+        </div>
+      </div>
       <textarea id="commentText" placeholder="Napisz komentarz..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendComment()}" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
       <button class="comment-send" onclick="sendComment()">Wyślij</button>
     </div>
@@ -1095,6 +1114,9 @@
       if (json.error) throw new Error(json.error.message);
 
       allData = json.data || [];
+      if (!document.getElementById('filterStatus').value) {
+        document.getElementById('filterStatus').value = 'ACTIVE';
+      }
       renderTable(allData);
       renderCards(allData);
       populateCampaignFilter(allData);
@@ -2741,6 +2763,49 @@ function switchTab(name,btn){
       // email notification
       sendEmailNotification(currentCommentName, txt, myNick, myEmoji);
     } catch(e) { alert('Błąd wysyłania komentarza'); }
+  }
+
+  // ─── EMOJI PICKER ───
+  const EMOJI_LIST = ['😊','😂','👍','👎','❤️','🔥','✅','❌','⚠️','💡','📌','🎯','💰','📊','🚀','⏸️','▶️','🔄','💬','📞','✏️','🗑️','👀','🙏','😅','🤔','💪','🎉','⭐','🏆'];
+
+  function buildEmojiGrid(gridId, textareaId) {
+    const grid = document.getElementById(gridId);
+    if (!grid || grid.children.length) return;
+    grid.innerHTML = EMOJI_LIST.map(e =>
+      `<span onclick="insertEmoji('${e}','${textareaId}')" title="${e}">${e}</span>`
+    ).join('');
+  }
+
+  function insertEmoji(emoji, textareaId) {
+    const ta = document.getElementById(textareaId);
+    if (!ta) return;
+    const pos = ta.selectionStart || ta.value.length;
+    ta.value = ta.value.slice(0, pos) + emoji + ta.value.slice(pos);
+    ta.focus();
+    ta.setSelectionRange(pos + emoji.length, pos + emoji.length);
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  }
+
+  function toggleEmojiPopup(popupId) {
+    const popup = document.getElementById(popupId);
+    const isVisible = popup.classList.contains('visible');
+    document.querySelectorAll('.emoji-popup').forEach(p => p.classList.remove('visible'));
+    if (!isVisible) {
+      popup.classList.add('visible');
+      const gridId = popupId.replace('Popup', 'Grid');
+      const taId = popupId.includes('comment') ? 'commentText' : 'gchatText';
+      buildEmojiGrid(gridId, taId);
+      setTimeout(() => {
+        const close = (e) => {
+          if (!popup.contains(e.target) && !e.target.classList.contains('emoji-btn')) {
+            popup.classList.remove('visible');
+            document.removeEventListener('click', close);
+          }
+        };
+        document.addEventListener('click', close);
+      }, 10);
+    }
   }
 
   // ─── QUICK REPLIES ───
