@@ -467,6 +467,42 @@
       thead th, tbody td { padding: 10px 12px; }
     }
 
+    /* ─── BELL & GLOBAL CHAT ─── */
+    .bell-btn { background:none; border:none; color:#fff; font-size:20px; cursor:pointer; position:relative; padding:4px 6px; border-radius:8px; transition:background .15s; }
+    .bell-btn:hover { background:rgba(255,255,255,.1); }
+    .bell-badge { position:absolute; top:-2px; right:-2px; background:#e53935; color:#fff; font-size:9px; font-weight:800; border-radius:10px; padding:1px 5px; min-width:16px; text-align:center; line-height:14px; }
+    .gchat-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:999; display:none; }
+    .gchat-overlay.visible { display:block; }
+    .gchat-panel { position:fixed; top:0; right:0; width:420px; height:100vh; background:#fff; z-index:1000; display:flex; flex-direction:column; box-shadow:-4px 0 30px rgba(0,0,0,.2); transform:translateX(100%); transition:transform .25s ease; }
+    .gchat-panel.visible { transform:translateX(0); }
+    .gchat-header { background:#111; color:#fff; padding:16px 20px; display:flex; align-items:center; gap:12px; flex-shrink:0; }
+    .gchat-header-title { flex:1; }
+    .gchat-header-title h3 { font-size:15px; font-weight:800; margin:0; }
+    .gchat-header-title p { font-size:11px; color:#aaa; margin:2px 0 0; }
+    .gchat-close { background:none; border:none; color:#fff; font-size:20px; cursor:pointer; }
+    .gchat-messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; background: #f8f7f4 url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e8e4dc' fill-opacity='0.5'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+    .gchat-msg { display:flex; gap:10px; align-items:flex-start; }
+    .gchat-msg.mine { flex-direction:row-reverse; }
+    .gchat-avatar { width:32px; height:32px; border-radius:50%; background:#f5f5f5; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+    .gchat-bubble { max-width:280px; }
+    .gchat-bubble-meta { font-size:10px; color:#bbb; margin-bottom:3px; }
+    .gchat-msg.mine .gchat-bubble-meta { text-align:right; }
+    .gchat-bubble-text { background:#f5f5f5; border-radius:12px 12px 12px 3px; padding:10px 13px; font-size:13px; color:#333; line-height:1.4; }
+    .gchat-msg.mine .gchat-bubble-text { background:#F5A000; color:#111; border-radius:12px 12px 3px 12px; }
+    .gchat-bubble-ctx { font-size:10px; color:#999; margin-top:3px; }
+    .gchat-msg.mine .gchat-bubble-ctx { text-align:right; }
+    .gchat-bubble-new { display:inline-block; background:#e53935; color:#fff; font-size:9px; font-weight:800; border-radius:4px; padding:1px 5px; margin-left:4px; vertical-align:middle; }
+    .gchat-input-area { padding:12px 16px; border-top:1px solid #eee; display:flex; gap:8px; align-items:flex-end; flex-shrink:0; }
+    .gchat-input-area textarea { flex:1; border:1px solid #ddd; border-radius:8px; padding:8px 10px; font-size:13px; font-family:inherit; resize:none; outline:none; min-height:38px; max-height:100px; }
+    .gchat-input-area textarea:focus { border-color:#F5A000; }
+    .gchat-send { background:#F5A000; color:#111; border:none; border-radius:8px; padding:8px 14px; font-weight:800; font-size:13px; cursor:pointer; }
+    .gchat-send:hover { background:#e09000; }
+    .gchat-divider { text-align:center; font-size:10px; color:#ccc; margin:4px 0; position:relative; }
+    .gchat-divider::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:#eee; }
+    .gchat-divider span { background:#fff; padding:0 8px; position:relative; }
+    tr.has-unread td { border-left:3px solid #e53935 !important; }
+    tr.has-unread td:first-child { border-left:3px solid #e53935; }
+
     /* ─── FIREBASE COMMENTS ─── */
     .btn-comment { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; color: #888; transition: all .15s; white-space:nowrap; }
     .btn-comment:hover { border-color: #F5A000; color: #F5A000; }
@@ -496,16 +532,35 @@
     /* nickname modal */
     .nick-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:2000; display:none; align-items:center; justify-content:center; }
     .nick-overlay.visible { display:flex; }
-    .nick-box { background:#fff; border-radius:16px; padding:40px; max-width:360px; width:90%; text-align:center; }
+    .nick-box { background:#fff; border-radius:16px; padding:40px; max-width:380px; width:90%; text-align:center; }
     .nick-box h3 { font-size:20px; font-weight:800; margin-bottom:8px; }
-    .nick-box p { color:#666; font-size:13px; margin-bottom:24px; line-height:1.5; }
-    .nick-box input { width:100%; padding:12px 14px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; outline:none; margin-bottom:12px; }
+    .nick-box p { color:#666; font-size:13px; margin-bottom:20px; line-height:1.5; }
+    .nick-box input { width:100%; padding:12px 14px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; outline:none; margin-bottom:14px; }
     .nick-box input:focus { border-color:#F5A000; }
-    .nick-colors { display:flex; gap:8px; justify-content:center; margin-bottom:20px; }
-    .nick-colors span { width:28px; height:28px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:transform .15s; }
-    .nick-colors span.selected { border-color:#111; transform:scale(1.2); }
+    .nick-emoji-label { font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px; }
+    .nick-emojis { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:20px; }
+    .nick-emojis span { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; border:2px solid transparent; background:#f5f5f5; transition:all .15s; }
+    .nick-emojis span:hover { background:#fff8ee; border-color:#F5A000; }
+    .nick-emojis span.selected { border-color:#F5A000; background:#fff8ee; transform:scale(1.15); box-shadow:0 0 0 3px #fde68a; }
     .nick-save { background:#F5A000; color:#111; border:none; border-radius:10px; padding:12px 32px; font-size:14px; font-weight:800; cursor:pointer; width:100%; }
     .nick-save:hover { background:#e09000; }
+    .comment-avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; background:#f5f5f5; }
+
+    /* ─── SELECTION BAR ─── */
+    .sel-bar { display:none; align-items:center; gap:16px; background:#111; color:#fff; padding:12px 20px; border-radius:10px; margin-bottom:12px; flex-wrap:wrap; }
+    .sel-bar.visible { display:flex; }
+    .sel-bar-count { font-size:13px; font-weight:700; color:#F5A000; white-space:nowrap; }
+    .sel-bar-stats { display:flex; gap:20px; flex:1; flex-wrap:wrap; }
+    .sel-bar-item { display:flex; flex-direction:column; }
+    .sel-bar-label { font-size:10px; color:#888; text-transform:uppercase; letter-spacing:.4px; }
+    .sel-bar-val { font-size:15px; font-weight:700; color:#fff; }
+    .sel-bar-val.orange { color:#F5A000; }
+    .sel-clear { background:none; border:1px solid #444; color:#aaa; border-radius:6px; padding:5px 12px; font-size:12px; cursor:pointer; white-space:nowrap; }
+    .sel-clear:hover { border-color:#F5A000; color:#F5A000; }
+    /* row checkbox */
+    .row-cb { accent-color:#F5A000; width:14px; height:14px; cursor:pointer; flex-shrink:0; }
+    tr.sel-row { background:#fffbf0 !important; }
+    tr.camp-header-row.sel-row td { background:#fff3d0 !important; }
   </style>
 </head>
 <body>
@@ -514,6 +569,10 @@
 <div class="header">
   <div class="logo">t2w <span>Ads Dashboard</span></div>
   <div class="header-right">
+    <button class="bell-btn" id="bellBtn" onclick="toggleGlobalChat()" title="Czat i powiadomienia">
+      🔔
+      <span class="bell-badge" id="bellBadge" style="display:none">0</span>
+    </button>
     <div class="status-dot" id="statusDot"></div>
     <div class="status-text" id="statusText">Niepołączono</div>
   </div>
@@ -614,9 +673,20 @@
     <select class="filter-select" id="filterCampaign" onchange="filterTable()">
       <option value="">Wszystkie kampanie</option>
     </select>
+    <div style="position:relative">
+      <button class="btn-refresh" id="colToggleBtn" onclick="toggleColPanel()" style="background:#fff;border:1px solid #ddd;color:#444">⚙ Kolumny</button>
+      <div id="colPanel" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);padding:12px 16px;z-index:200;min-width:200px">
+        <div style="font-size:11px;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:10px">Widoczne kolumny</div>
+        <div id="colCheckboxes" style="display:flex;flex-direction:column;gap:7px"></div>
+        <div style="border-top:1px solid #eee;margin-top:10px;padding-top:8px;display:flex;gap:8px">
+          <button onclick="resetColVisibility()" style="flex:1;padding:5px 8px;border:1px solid #ddd;border-radius:6px;background:#fff;font-size:11px;cursor:pointer;color:#666">Reset</button>
+        </div>
+      </div>
+    </div>
     <button class="btn-refresh" onclick="loadData()">↻ Odśwież</button>
     <button class="btn-logout" onclick="logout()">Wyloguj</button>
   </div>
+  <style id="colHideStyle"></style>
 
   <!-- GENERATE MODAL -->
   <div class="modal-overlay" id="generateModal" onclick="closeGenerateModal(event)">
@@ -666,6 +736,19 @@
 
   <!-- TABLE -->
   <div class="section-title">Zestawy reklam</div>
+  <!-- SELECTION BAR -->
+  <div class="sel-bar" id="selBar">
+    <span class="sel-bar-count" id="selCount">0 zaznaczonych</span>
+    <div class="sel-bar-stats">
+      <div class="sel-bar-item"><span class="sel-bar-label">Wydane</span><span class="sel-bar-val orange" id="selSpend">—</span></div>
+      <div class="sel-bar-item"><span class="sel-bar-label">Wyświetlenia</span><span class="sel-bar-val" id="selImpr">—</span></div>
+      <div class="sel-bar-item"><span class="sel-bar-label">Kliknięcia</span><span class="sel-bar-val" id="selClicks">—</span></div>
+      <div class="sel-bar-item"><span class="sel-bar-label">CPC</span><span class="sel-bar-val" id="selCpc">—</span></div>
+      <div class="sel-bar-item"><span class="sel-bar-label">📋 Aplikacje</span><span class="sel-bar-val" id="selLeads">—</span></div>
+      <div class="sel-bar-item"><span class="sel-bar-label">📞 Telefony</span><span class="sel-bar-val" id="selCalls">—</span></div>
+    </div>
+    <button class="sel-clear" onclick="clearSelection()">✕ Wyczyść</button>
+  </div>
   <div class="table-wrap">
     <div class="loader" id="loader">
       <div class="spin"></div><br/>Pobieranie danych z Meta Ads...
@@ -674,6 +757,7 @@
     <table id="adsTable" style="display:none">
       <thead>
         <tr>
+          <th style="width:30px"><input type="checkbox" class="row-cb" id="cbAll" onclick="toggleSelectAll(this)" title="Zaznacz wszystkie"/></th>
           <th onclick="sortTable('campaign_name')">Kampania ↕</th>
           <th onclick="sortTable('name')">Zestaw reklam ↕</th>
           <th>Reklama</th>
@@ -694,19 +778,51 @@
 
 </div>
 
+<!-- GLOBAL CHAT PANEL -->
+<div class="gchat-overlay" id="gchatOverlay" onclick="toggleGlobalChat()"></div>
+<div class="gchat-panel" id="gchatPanel">
+  <div class="gchat-header">
+    <div class="gchat-header-title">
+      <h3>💬 Czat & Powiadomienia</h3>
+      <p>Komentarze do zestawów + wiadomości ogólne</p>
+    </div>
+    <button class="gchat-close" onclick="toggleGlobalChat()">✕</button>
+  </div>
+  <div class="gchat-messages" id="gchatMessages">
+    <div style="text-align:center;padding:40px;color:#bbb;font-size:13px">Ładowanie wiadomości...</div>
+  </div>
+  <div class="gchat-input-area">
+    <textarea id="gchatText" placeholder="Napisz wiadomość ogólną..." rows="1"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGlobalMessage()}"
+      oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+    <button class="gchat-send" onclick="sendGlobalMessage()">Wyślij</button>
+  </div>
+</div>
+
 <!-- NICKNAME MODAL -->
 <div class="nick-overlay" id="nickModal">
   <div class="nick-box">
     <h3>👋 Witaj w dashboardzie!</h3>
     <p>Podaj swoje imię — będzie widoczne przy komentarzach w kampaniach.</p>
     <input type="text" id="nickInput" placeholder="np. Anastazja" maxlength="20"/>
-    <div class="nick-colors" id="nickColors">
-      <span style="background:#F5A000" class="selected" data-color="#F5A000"></span>
-      <span style="background:#e53935" data-color="#e53935"></span>
-      <span style="background:#1976D2" data-color="#1976D2"></span>
-      <span style="background:#2E7D32" data-color="#2E7D32"></span>
-      <span style="background:#7B1FA2" data-color="#7B1FA2"></span>
-      <span style="background:#00838F" data-color="#00838F"></span>
+    <div class="nick-emoji-label">Вибери свій аватар</div>
+    <div class="nick-emojis" id="nickEmojis">
+      <span class="selected" data-emoji="🦊">🦊</span>
+      <span data-emoji="🐱">🐱</span>
+      <span data-emoji="🐶">🐶</span>
+      <span data-emoji="🦁">🦁</span>
+      <span data-emoji="🐸">🐸</span>
+      <span data-emoji="🦋">🦋</span>
+      <span data-emoji="🌟">🌟</span>
+      <span data-emoji="🚀">🚀</span>
+      <span data-emoji="🎯">🎯</span>
+      <span data-emoji="💎">💎</span>
+      <span data-emoji="🌺">🌺</span>
+      <span data-emoji="🍊">🍊</span>
+      <span data-emoji="⚡">⚡</span>
+      <span data-emoji="🐝">🐝</span>
+      <span data-emoji="🦄">🦄</span>
+      <span data-emoji="👑">👑</span>
     </div>
     <button class="nick-save" onclick="saveNickname()">Zapisz i wejdź →</button>
   </div>
@@ -799,6 +915,7 @@
     <div style="font-size:13px;color:#666;flex:1" id="gControlsLabel">🔵 Dane Google Ads — wprowadź ręcznie</div>
     <button onclick="addGoogleTabRow()" style="padding:10px 18px;background:#F5A000;color:#111;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">+ Dodaj kampanię</button>
     <button onclick="saveGoogleData()" style="padding:10px 18px;background:#111;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Zapisz</button>
+    <button onclick="refreshGoogleData(this)" style="padding:10px 18px;background:#333;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">↻ Odśwież</button>
     <button onclick="openGoogleReportModal()" style="padding:10px 18px;background:#111;color:#F5A000;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📄 Generuj raport</button>
   </div>
 
@@ -1072,6 +1189,9 @@
       campTr.className = 'camp-header-row';
       campTr.style.cursor = 'pointer';
       campTr.innerHTML = `
+        <td style="width:30px;padding:0 8px" onclick="event.stopPropagation()">
+          <input type="checkbox" class="row-cb camp-cb" data-cid="${cid}" data-key="${key}" onclick="event.stopPropagation();toggleCampSel(this,'${cid}','${key}')" />
+        </td>
         <td colspan="2" class="wrap">
           <span class="camp-arrow" id="arr-${key}">▶</span>
           ${campBadge} <strong>${camp.name}</strong>
@@ -1116,6 +1236,9 @@
         tr.style.display = 'none';
         tr.style.background = '#fafaf8';
         tr.innerHTML = `
+          <td style="width:30px;padding:0 8px">
+            <input type="checkbox" class="row-cb adset-cb" data-id="${d.id}" data-cid="${cid}" data-key="${key}" onchange="toggleAdsetSel(this)" />
+          </td>
           <td colspan="2" class="wrap" style="padding-left:32px;border-left:3px solid #f0c060">
             <div style="font-size:12px;color:#444">${d.name}</div>
             <div class="date-cell">${fmtDate(d.start_time || d.created_time)}</div>
@@ -2177,6 +2300,15 @@ function switchTab(name,btn){
     if (costEl) costEl.textContent = totCost > 0 ? totCost.toLocaleString('pl',{minimumFractionDigits:2})+' zł' : '—';
   }
 
+  async function refreshGoogleData(btn) {
+    const orig = btn.textContent;
+    btn.textContent = '⏳ Ładowanie...';
+    btn.disabled = true;
+    await loadGoogleDataFromJSON();
+    btn.textContent = orig;
+    btn.disabled = false;
+  }
+
   async function loadGoogleDataFromJSON() {
     try {
       const res = await fetch('google_data.json?t=' + Date.now());
@@ -2312,26 +2444,193 @@ function switchTab(name,btn){
   const savedGToken = sessionStorage.getItem('g_token');
   if (savedGToken) { gToken = savedGToken; onGoogleConnected(); }
 
+  // ─── COLUMN VISIBILITY ───
+  const COL_DEFS = [
+    { idx: 2,  label: 'Kampania',      default: true,  locked: true },
+    { idx: 3,  label: 'Zestaw reklam', default: true,  locked: true },
+    { idx: 4,  label: 'Reklama',       default: false },
+    { idx: 5,  label: 'Status',        default: true },
+    { idx: 6,  label: 'Budżet/dzień',  default: true },
+    { idx: 7,  label: 'Wydane',        default: true },
+    { idx: 8,  label: 'Wyświetlenia',  default: true },
+    { idx: 9,  label: 'Kliknięcia',    default: true },
+    { idx: 10, label: 'CPC',           default: true },
+    { idx: 11, label: '📋 Aplikacje',   default: true },
+    { idx: 12, label: '📞 Telefony',    default: true },
+    { idx: 13, label: '💬 Czat',        default: true },
+  ];
+
+  let colVisible = JSON.parse(localStorage.getItem('colVisible') || 'null');
+  if (!colVisible) resetColVisibility(true);
+
+  function resetColVisibility(silent) {
+    colVisible = {};
+    COL_DEFS.forEach(c => colVisible[c.idx] = c.default);
+    if (!silent) { localStorage.setItem('colVisible', JSON.stringify(colVisible)); applyColVisibility(); buildColPanel(); }
+  }
+
+  function applyColVisibility() {
+    const hidden = COL_DEFS.filter(c => !colVisible[c.idx]).map(c =>
+      `#adsTable th:nth-child(${c.idx}),#adsTable td:nth-child(${c.idx}){display:none}`
+    ).join('\n');
+    document.getElementById('colHideStyle').textContent = hidden;
+    localStorage.setItem('colVisible', JSON.stringify(colVisible));
+  }
+
+  function buildColPanel() {
+    const box = document.getElementById('colCheckboxes');
+    if (!box) return;
+    box.innerHTML = COL_DEFS.map(c => `
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#333;cursor:${c.locked?'default':'pointer'}">
+        <input type="checkbox" ${colVisible[c.idx]?'checked':''} ${c.locked?'disabled':''} style="accent-color:#F5A000"
+          onchange="colVisible[${c.idx}]=this.checked;applyColVisibility()"/>
+        ${c.label}${c.locked?' <span style="font-size:10px;color:#bbb">(zawsze)</span>':''}
+      </label>`).join('');
+  }
+
+  function toggleColPanel() {
+    const p = document.getElementById('colPanel');
+    const open = p.style.display === 'none';
+    p.style.display = open ? 'block' : 'none';
+    if (open) buildColPanel();
+    if (open) {
+      const close = (e) => { if (!document.getElementById('colPanel').contains(e.target) && e.target.id !== 'colToggleBtn') { p.style.display='none'; document.removeEventListener('click', close); } };
+      setTimeout(() => document.addEventListener('click', close), 10);
+    }
+  }
+
+  // apply on load
+  applyColVisibility();
+
+  // ─── SELECTION ───
+  const selectedIds = new Set();
+
+  function toggleAdsetSel(cb) {
+    const id = cb.dataset.id;
+    const cid = cb.dataset.cid;
+    const key = cb.dataset.key;
+    if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+    cb.closest('tr').classList.toggle('sel-row', cb.checked);
+    syncCampCb(cid, key);
+    updateSelBar();
+  }
+
+  function toggleCampSel(cb, cid, key) {
+    const adsetCbs = document.querySelectorAll(`.adset-cb[data-cid="${cid}"]`);
+    adsetCbs.forEach(a => {
+      a.checked = cb.checked;
+      const id = a.dataset.id;
+      if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+      a.closest('tr').classList.toggle('sel-row', cb.checked);
+    });
+    cb.closest('tr').classList.toggle('sel-row', cb.checked);
+    updateSelBar();
+  }
+
+  function syncCampCb(cid, key) {
+    const campCb = document.querySelector(`.camp-cb[data-cid="${cid}"]`);
+    if (!campCb) return;
+    const adsetCbs = [...document.querySelectorAll(`.adset-cb[data-cid="${cid}"]`)];
+    const checked = adsetCbs.filter(a => a.checked).length;
+    campCb.checked = checked === adsetCbs.length && adsetCbs.length > 0;
+    campCb.indeterminate = checked > 0 && checked < adsetCbs.length;
+    campCb.closest('tr').classList.toggle('sel-row', checked > 0);
+  }
+
+  function toggleSelectAll(cb) {
+    document.querySelectorAll('.adset-cb').forEach(a => {
+      a.checked = cb.checked;
+      const id = a.dataset.id;
+      if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+      a.closest('tr').classList.toggle('sel-row', cb.checked);
+    });
+    document.querySelectorAll('.camp-cb').forEach(c => {
+      c.checked = cb.checked;
+      c.closest('tr').classList.toggle('sel-row', cb.checked);
+    });
+    updateSelBar();
+  }
+
+  function clearSelection() {
+    selectedIds.clear();
+    document.querySelectorAll('.adset-cb,.camp-cb').forEach(cb => { cb.checked = false; cb.indeterminate = false; cb.closest('tr').classList.remove('sel-row'); });
+    const cbAll = document.getElementById('cbAll');
+    if (cbAll) { cbAll.checked = false; cbAll.indeterminate = false; }
+    updateSelBar();
+  }
+
+  function updateSelBar() {
+    const bar = document.getElementById('selBar');
+    if (selectedIds.size === 0) { bar.classList.remove('visible'); return; }
+    bar.classList.add('visible');
+    document.getElementById('selCount').textContent = selectedIds.size + ' zaznaczonych';
+
+    let spend=0, impr=0, clicks=0, leads=0, calls=0;
+    allData.forEach(d => {
+      if (!selectedIds.has(d.id)) return;
+      const ins = d.insights?.data?.[0];
+      spend  += ins ? parseFloat(ins.spend||0) : 0;
+      impr   += ins ? parseInt(ins.impressions||0) : 0;
+      clicks += ins ? parseInt(ins.clicks||0) : 0;
+      leads  += getLeads(ins);
+      calls  += getAction(ins, ['click_to_call_native_call_placed']);
+    });
+    const cpc = clicks > 0 ? (spend/clicks).toFixed(2)+' zł' : '—';
+    document.getElementById('selSpend').textContent  = spend.toFixed(2)+' zł';
+    document.getElementById('selImpr').textContent   = impr.toLocaleString('pl');
+    document.getElementById('selClicks').textContent = clicks.toLocaleString('pl');
+    document.getElementById('selCpc').textContent    = cpc;
+    document.getElementById('selLeads').textContent  = leads || '—';
+    document.getElementById('selCalls').textContent  = calls || '—';
+  }
+
+  // ─── EMAILJS CONFIG ───
+  // Заповни після реєстрації на emailjs.com:
+  const EJS_SERVICE  = 'service_0rvytgj';
+  const EJS_TEMPLATE = 'template_x2xr15f';
+  const EJS_KEY      = 'I91XmKwAryIcKy--B';
+
+  async function sendEmailNotification(campaignName, commentText, authorNick, authorEmoji) {
+    if (!EJS_KEY || EJS_KEY.startsWith('ЗАМІНИТИ')) return;
+    try {
+      await fetch(`https://api.emailjs.com/api/v1.0/email/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: EJS_SERVICE,
+          template_id: EJS_TEMPLATE,
+          user_id: EJS_KEY,
+          template_params: {
+            campaign_name: campaignName,
+            comment_text: commentText,
+            author_name: authorNick,
+            author_emoji: authorEmoji,
+            dashboard_url: window.location.href,
+            sent_at: new Date().toLocaleString('pl-PL')
+          }
+        })
+      });
+    } catch(e) { console.warn('EmailJS error:', e); }
+  }
+
   // ─── FIREBASE COMMENTS ───
   const FB_URL = 'https://t2w-ads-dashboard-default-rtdb.europe-west1.firebasedatabase.app';
   let currentCommentCid = null;
   let currentCommentName = '';
   let commentUnsubscribe = null;
 
-  const AVATAR_COLORS = ['#F5A000','#e53935','#1976D2','#2E7D32','#7B1FA2','#00838F'];
   let myNick = localStorage.getItem('fb_nick') || '';
-  let myColor = localStorage.getItem('fb_color') || '#F5A000';
+  let myEmoji = localStorage.getItem('fb_emoji') || '🦊';
 
   function initNickModal() {
     if (!myNick) {
       document.getElementById('nickModal').classList.add('visible');
-      // preselect color buttons
-      document.querySelectorAll('#nickColors span').forEach(s => {
-        s.classList.toggle('selected', s.dataset.color === myColor);
+      document.querySelectorAll('#nickEmojis span').forEach(s => {
+        s.classList.toggle('selected', s.dataset.emoji === myEmoji);
         s.onclick = () => {
-          document.querySelectorAll('#nickColors span').forEach(x => x.classList.remove('selected'));
+          document.querySelectorAll('#nickEmojis span').forEach(x => x.classList.remove('selected'));
           s.classList.add('selected');
-          myColor = s.dataset.color;
+          myEmoji = s.dataset.emoji;
         };
       });
     }
@@ -2342,7 +2641,7 @@ function switchTab(name,btn){
     if (!v) { document.getElementById('nickInput').focus(); return; }
     myNick = v;
     localStorage.setItem('fb_nick', myNick);
-    localStorage.setItem('fb_color', myColor);
+    localStorage.setItem('fb_emoji', myEmoji);
     document.getElementById('nickModal').classList.remove('visible');
   }
 
@@ -2393,12 +2692,11 @@ function switchTab(name,btn){
     }
     const items = Object.values(data).sort((a,b) => a.ts - b.ts);
     list.innerHTML = items.map(c => {
-      const initials = (c.nick||'?').slice(0,2).toUpperCase();
-      const color = c.color || '#F5A000';
+      const emoji = c.emoji || '🦊';
       const time = new Date(c.ts).toLocaleString('pl-PL', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
       return `<div class="comment-item">
         <div class="comment-meta">
-          <div class="comment-avatar" style="background:${color}">${initials}</div>
+          <div class="comment-avatar">${emoji}</div>
           <span class="comment-author">${c.nick||'?'}</span>
           <span class="comment-time">${time}</span>
         </div>
@@ -2421,7 +2719,7 @@ function switchTab(name,btn){
     const txt = document.getElementById('commentText').value.trim();
     if (!txt || !currentCommentCid) return;
     const key = currentCommentCid.replace(/\W/g,'_');
-    const payload = { nick: myNick, color: myColor, text: txt, ts: Date.now() };
+    const payload = { nick: myNick, emoji: myEmoji, text: txt, ts: Date.now() };
     try {
       await fetch(`${FB_URL}/comments/${key}.json`, {
         method: 'POST',
@@ -2434,8 +2732,160 @@ function switchTab(name,btn){
       const data = await fetch(`${FB_URL}/comments/${key}.json`).then(r=>r.json());
       renderComments(data);
       updateCommentBadge(currentCommentCid, data);
+      // email notification
+      sendEmailNotification(currentCommentName, txt, myNick, myEmoji);
     } catch(e) { alert('Błąd wysyłania komentarza'); }
   }
+
+  // ─── GLOBAL CHAT ───
+  let gchatOpen = false;
+  let lastReadTs = parseInt(localStorage.getItem('lastReadTs') || '0');
+  let allGchatMessages = [];
+  let gchatPollTimer = null;
+
+  function toggleGlobalChat() {
+    gchatOpen = !gchatOpen;
+    document.getElementById('gchatPanel').classList.toggle('visible', gchatOpen);
+    document.getElementById('gchatOverlay').classList.toggle('visible', gchatOpen);
+    if (gchatOpen) {
+      loadGchat();
+      setTimeout(() => document.getElementById('gchatText').focus(), 200);
+    } else {
+      // mark all as read
+      lastReadTs = Date.now();
+      localStorage.setItem('lastReadTs', lastReadTs);
+      document.getElementById('bellBadge').style.display = 'none';
+      document.querySelectorAll('tr.has-unread').forEach(r => r.classList.remove('has-unread'));
+    }
+  }
+
+  async function loadGchat() {
+    try {
+      const [chatRaw, commentsRaw] = await Promise.all([
+        fetch(`${FB_URL}/chat.json`).then(r => r.json()),
+        fetch(`${FB_URL}/comments.json`).then(r => r.json())
+      ]);
+
+      const msgs = [];
+
+      // general chat messages
+      if (chatRaw) {
+        Object.values(chatRaw).forEach(m => {
+          msgs.push({ ...m, type: 'chat' });
+        });
+      }
+
+      // adset comments
+      if (commentsRaw) {
+        Object.entries(commentsRaw).forEach(([adsetKey, comments]) => {
+          if (!comments) return;
+          Object.values(comments).forEach(c => {
+            msgs.push({ ...c, type: 'comment', adsetKey });
+          });
+        });
+      }
+
+      msgs.sort((a, b) => a.ts - b.ts);
+      allGchatMessages = msgs;
+      renderGchat(msgs);
+      updateUnread(msgs);
+
+      // poll every 15s
+      clearTimeout(gchatPollTimer);
+      if (gchatOpen) gchatPollTimer = setTimeout(loadGchat, 15000);
+    } catch(e) {
+      document.getElementById('gchatMessages').innerHTML = '<div style="padding:20px;color:#bbb;text-align:center">Błąd ładowania wiadomości</div>';
+    }
+  }
+
+  function renderGchat(msgs) {
+    const container = document.getElementById('gchatMessages');
+    if (!msgs.length) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:13px">Brak wiadomości.<br>Napisz pierwszą!</div>';
+      return;
+    }
+
+    let html = '';
+    let lastDate = '';
+    msgs.forEach(m => {
+      const date = new Date(m.ts).toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' });
+      if (date !== lastDate) {
+        html += `<div class="gchat-divider"><span>${date}</span></div>`;
+        lastDate = date;
+      }
+      const isMine = m.nick === myNick;
+      const isNew = m.ts > lastReadTs;
+      const time = new Date(m.ts).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' });
+      const emoji = m.emoji || '🦊';
+      const newBadge = isNew ? '<span class="gchat-bubble-new">NOWE</span>' : '';
+      const ctx = m.type === 'comment' ? `<div class="gchat-bubble-ctx">📁 komentarz do zestawu</div>` : '';
+
+      html += `<div class="gchat-msg${isMine ? ' mine' : ''}">
+        <div class="gchat-avatar">${emoji}</div>
+        <div class="gchat-bubble">
+          <div class="gchat-bubble-meta">${isMine ? 'Ty' : m.nick} · ${time}${newBadge}</div>
+          <div class="gchat-bubble-text">${m.text.replace(/</g,'&lt;')}</div>
+          ${ctx}
+        </div>
+      </div>`;
+    });
+
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function updateUnread(msgs) {
+    const unread = msgs.filter(m => m.ts > lastReadTs && m.nick !== myNick);
+    const badge = document.getElementById('bellBadge');
+    if (unread.length > 0) {
+      badge.textContent = unread.length > 9 ? '9+' : unread.length;
+      badge.style.display = 'block';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    // highlight rows with unread adset comments
+    document.querySelectorAll('tr.has-unread').forEach(r => r.classList.remove('has-unread'));
+    unread.filter(m => m.type === 'comment').forEach(m => {
+      const adsetRow = document.querySelector(`.adset-cb[data-key="${m.adsetKey}"]`);
+      if (adsetRow) adsetRow.closest('tr').classList.add('has-unread');
+    });
+  }
+
+  async function sendGlobalMessage() {
+    if (!myNick) { initNickModal(); return; }
+    const txt = document.getElementById('gchatText').value.trim();
+    if (!txt) return;
+    const payload = { nick: myNick, emoji: myEmoji, text: txt, ts: Date.now() };
+    try {
+      await fetch(`${FB_URL}/chat.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      document.getElementById('gchatText').value = '';
+      document.getElementById('gchatText').style.height = 'auto';
+      sendEmailNotification('Wiadomość ogólna', txt, myNick, myEmoji);
+      await loadGchat();
+    } catch(e) { alert('Błąd wysyłania'); }
+  }
+
+  // poll for unread every 30s even when chat closed
+  setInterval(async () => {
+    if (gchatOpen) return;
+    try {
+      const [chatRaw, commentsRaw] = await Promise.all([
+        fetch(`${FB_URL}/chat.json`).then(r => r.json()),
+        fetch(`${FB_URL}/comments.json`).then(r => r.json())
+      ]);
+      const msgs = [];
+      if (chatRaw) Object.values(chatRaw).forEach(m => msgs.push({ ...m, type: 'chat' }));
+      if (commentsRaw) Object.entries(commentsRaw).forEach(([k, cs]) => {
+        if (cs) Object.values(cs).forEach(c => msgs.push({ ...c, type: 'comment', adsetKey: k }));
+      });
+      updateUnread(msgs);
+    } catch(e) {}
+  }, 30000);
 
   // init nickname check after page loads
   setTimeout(initNickModal, 800);
