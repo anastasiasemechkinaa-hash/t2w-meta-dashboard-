@@ -1793,13 +1793,10 @@
         <td class="num" style="color:white">${cReach.toLocaleString('pl')}</td>
         <td class="num" style="color:white">${cFreq}</td>
         <td class="num" style="color:white">${cClicks.toLocaleString('pl')}</td>
-        <td class="num" style="color:white">${cLink.toLocaleString('pl')}</td>
         <td class="num" style="color:white">${cCTR}</td>
         <td class="num" style="color:white">${cCPC}</td>
         <td class="num" style="color:white">${cCPM}</td>
         <td class="num" style="color:white">${cCalls||'—'}</td>
-        <td class="num" style="color:white">${cReact||'—'}</td>
-        <td class="num" style="color:white">${cComm||'—'}</td>
         <td class="num" style="color:#fbb040;font-weight:800">${cLeads||'—'}</td>
         <td class="num" style="color:white">${cCPAlead}</td>
       </tr>`;
@@ -1832,13 +1829,10 @@
           <td class="num">${fmtInt(ins?.reach)}</td>
           <td class="num" style="${freqWarn}">${freq}</td>
           <td class="num">${fmtInt(ins?.clicks)}</td>
-          <td class="num">${fmtInt(ins?.inline_link_clicks)}</td>
           <td class="num">${ctr}</td>
           <td class="num">${cpc}</td>
           <td class="num">${cpm}</td>
           <td class="num">${calls>0?calls:'—'}</td>
-          <td class="num">${react>0?react:'—'}</td>
-          <td class="num">${comments>0?comments:'—'}</td>
           <td class="num" style="${leads>0?'color:#f98d07;font-weight:700':''}">${leads>0?leads:'—'}</td>
           <td class="num">${cpaLead}</td>
         </tr>`;
@@ -2040,13 +2034,10 @@
     <th class="num">Zasięg</th>
     <th class="num">Częstotl.</th>
     <th class="num">Kliki</th>
-    <th class="num">Kliki w link</th>
     <th class="num">CTR (%)</th>
     <th class="num">CPC (PLN)</th>
     <th class="num">CPM (PLN)</th>
     <th class="num">📞 Tel.</th>
-    <th class="num">Reakcje</th>
-    <th class="num">Koment.</th>
     <th class="num">📋 Ev. A*</th>
     <th class="num">CPA A (PLN)</th>
   </tr></thead>
@@ -2059,13 +2050,10 @@
     <td class="num">—</td>
     <td class="num">${totFreq}</td>
     <td class="num">${totClicks.toLocaleString('pl')}</td>
-    <td class="num">${totLinkClicks.toLocaleString('pl')}</td>
     <td class="num">${totCTR}</td>
     <td class="num">${totCPC}</td>
     <td class="num">${totCPM}</td>
     <td class="num">${totCalls||'—'}</td>
-    <td class="num">${totReact||'—'}</td>
-    <td class="num">${totComm||'—'}</td>
     <td class="num" style="color:#fbb040">${totLeads||'—'}</td>
     <td class="num">${totCPAlead}</td>
   </tr></tfoot>
