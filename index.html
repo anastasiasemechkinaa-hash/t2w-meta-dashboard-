@@ -1790,8 +1790,6 @@
         <td colspan="2"><span class="camp-arrow" id="ra-${campKey}">▶</span> <strong>${camp.name}</strong> <span class="${camp.status==='ACTIVE'?'st-active':'st-paused'}">${camp.status==='ACTIVE'?'AKTYWNA':'WSTRZYM.'}</span></td>
         <td class="num" style="color:white;font-weight:700">${cSpend.toFixed(2).replace('.',',')}</td>
         <td class="num" style="color:white">${cImpr.toLocaleString('pl')}</td>
-        <td class="num" style="color:white">${cReach.toLocaleString('pl')}</td>
-        <td class="num" style="color:white">${cFreq}</td>
         <td class="num" style="color:white">${cClicks.toLocaleString('pl')}</td>
         <td class="num" style="color:white">${cCTR}</td>
         <td class="num" style="color:white">${cCPC}</td>
@@ -1826,8 +1824,6 @@
           <td style="text-align:center">${statusBadge}</td>
           <td class="num">${spend>0?spend.toFixed(2).replace('.',','):'—'}</td>
           <td class="num">${fmtInt(ins?.impressions)}</td>
-          <td class="num">${fmtInt(ins?.reach)}</td>
-          <td class="num" style="${freqWarn}">${freq}</td>
           <td class="num">${fmtInt(ins?.clicks)}</td>
           <td class="num">${ctr}</td>
           <td class="num">${cpc}</td>
@@ -2031,8 +2027,6 @@
     <th>Status</th>
     <th class="num">Wydatki (PLN)</th>
     <th class="num">Wyświetlenia</th>
-    <th class="num">Zasięg</th>
-    <th class="num">Częstotl.</th>
     <th class="num">Kliki</th>
     <th class="num">CTR (%)</th>
     <th class="num">CPC (PLN)</th>
@@ -2047,8 +2041,6 @@
     <td></td>
     <td class="num">${totSpend.toFixed(2).replace('.',',')}</td>
     <td class="num">${totImpr.toLocaleString('pl')}</td>
-    <td class="num">—</td>
-    <td class="num">${totFreq}</td>
     <td class="num">${totClicks.toLocaleString('pl')}</td>
     <td class="num">${totCTR}</td>
     <td class="num">${totCPC}</td>
