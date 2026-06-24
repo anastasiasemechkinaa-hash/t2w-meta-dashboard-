@@ -781,6 +781,9 @@
           <button onclick="generateReport('pdf')" style="flex:1;padding:14px;background:#111;color:#F5A000;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">
             🖨️ Otwórz do PDF
           </button>
+          <button onclick="generateReport('link')" style="flex:1;padding:14px;background:#1a7f37;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">
+            🔗 Generuj link
+          </button>
         </div>
         <div id="repLoader" style="display:none;text-align:center;color:#aaa;font-size:13px">
           <div style="display:inline-block;width:24px;height:24px;border:3px solid #f0f0f0;border-top-color:#F5A000;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:8px;vertical-align:middle"></div>
@@ -1581,6 +1584,8 @@
     document.getElementById('repTo').value = until;
     document.getElementById('repTitle').value = formatMonthTitle(since, until);
     buildRepCampList();
+    const savedPat = localStorage.getItem('gh_pat') || '';
+    if (savedPat) document.getElementById('ghPatInput').value = savedPat;
     document.getElementById('generateModal').classList.add('visible');
   }
 
@@ -1700,6 +1705,9 @@
         const w = window.open('', '_blank');
         w.document.write(html);
         w.document.close();
+      } else if (mode === 'link') {
+        await publishReportToGitHub(html, title, since, until);
+        return;
       } else {
         downloadHTML(html, `raport-t2w-${since}-${until}.html`);
       }
@@ -1707,6 +1715,37 @@
       alert('Błąd: ' + e.message);
     }
     document.getElementById('generateModal').classList.remove('visible');
+  }
+
+  async function publishReportToGitHub(html, title, since, until) {
+    const id = `${since}_${until}_${Date.now()}`;
+    const res = await fetch(`${FB_URL}/reports/${id}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(html)
+    });
+    if (!res.ok) { alert('Błąd zapisu do Firebase: ' + res.status); return; }
+
+    const base = 'https://anastasiasemechkinaa-hash.github.io/t2w-meta-dashboard-';
+    const url = `${base}/view.html?id=${id}`;
+    document.getElementById('generateModal').classList.remove('visible');
+
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+    d.innerHTML = `<div style="background:#fff;border-radius:16px;padding:32px;max-width:520px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+      <div style="font-size:48px;margin-bottom:12px">🔗</div>
+      <h3 style="margin:0 0 8px;font-size:18px">Link do raportu gotowy!</h3>
+      <p style="color:#666;font-size:13px;margin-bottom:16px">Wyślij ten link — otworzy się raport bez żadnego logowania</p>
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <input value="${url}" readonly style="flex:1;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:11px;font-family:monospace;background:#f9f9f9"/>
+        <button onclick="navigator.clipboard.writeText('${url}');this.textContent='✓ Skopiowano';setTimeout(()=>this.textContent='Kopiuj',2000)" style="padding:10px 16px;background:#F5A000;border:none;border-radius:8px;font-weight:800;cursor:pointer;white-space:nowrap">Kopiuj</button>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <a href="${url}" target="_blank" style="padding:12px 24px;background:#1a7f37;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">Otwórz →</a>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="padding:12px 24px;background:#f0f0f0;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">Zamknij</button>
+      </div>
+    </div>`;
+    document.body.appendChild(d);
   }
 
   function getIns(d) { return d.insights?.data?.[0] || null; }
