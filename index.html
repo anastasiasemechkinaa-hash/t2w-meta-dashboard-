@@ -461,10 +461,53 @@
     footer strong { color: #F5A000; }
 
     @media (max-width: 768px) {
-      .header { padding: 16px 20px; }
-      .main { padding: 20px; }
-      .cards { grid-template-columns: 1fr 1fr; }
-      thead th, tbody td { padding: 10px 12px; }
+      .header { padding: 12px 16px; }
+      .logo { font-size: 16px; }
+      .main { padding: 12px; }
+      .main-tabs { padding: 0 12px; gap: 0; }
+      .main-tab { flex: 1; text-align: center; padding: 10px 8px; font-size: 13px; }
+
+      /* KPI cards — 2 columns */
+      .cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .card { padding: 14px; }
+      .c-val { font-size: 22px; }
+
+      /* filters */
+      .controls { flex-wrap: wrap; gap: 6px; padding: 10px 12px; }
+      .search-input { width: 100%; }
+      .filter-select { flex: 1; min-width: 0; font-size: 12px; }
+      .btn-refresh, .btn-logout { font-size: 12px; padding: 8px 12px; }
+
+      /* table — horizontal scroll */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      #adsTable { min-width: 600px; }
+      thead th, tbody td { padding: 8px 10px; font-size: 11px; }
+
+      /* selection bar */
+      .sel-bar { gap: 8px; padding: 10px 12px; }
+      .sel-bar-stats { gap: 10px; }
+      .sel-bar-val { font-size: 13px; }
+
+      /* date buttons */
+      .date-row { flex-wrap: wrap; gap: 6px; }
+      .date-btn { font-size: 12px; padding: 7px 12px; }
+
+      /* section title */
+      .section-title { font-size: 12px; margin: 12px 0 6px; }
+
+      /* generate report btn */
+      .btn-generate { font-size: 12px; padding: 8px 14px; }
+
+      /* chat panel full screen on mobile */
+      .gchat-panel { width: 100%; }
+      .comment-panel { width: 100%; }
+
+      /* modal full width */
+      .modal { margin: 16px; padding: 24px 20px; }
+
+      /* Google tab */
+      .google-panel { padding: 12px; }
+      .date-row { padding: 0; }
     }
 
     /* ─── BELL & GLOBAL CHAT ─── */
