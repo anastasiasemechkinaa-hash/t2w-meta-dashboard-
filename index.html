@@ -2718,25 +2718,28 @@ function switchTab(name,btn){
   let myNick = localStorage.getItem('fb_nick') || '';
   let myEmoji = localStorage.getItem('fb_emoji') || '🦊';
 
+  function setupEmojiHandlers() {
+    document.querySelectorAll('#nickEmojis span').forEach(s => {
+      s.classList.toggle('selected', s.dataset.emoji === myEmoji);
+      s.onclick = () => {
+        document.querySelectorAll('#nickEmojis span').forEach(x => x.classList.remove('selected'));
+        s.classList.add('selected');
+        myEmoji = s.dataset.emoji;
+      };
+    });
+  }
+
   function initNickModal() {
     if (!myNick) {
+      setupEmojiHandlers();
       document.getElementById('nickModal').classList.add('visible');
-      document.querySelectorAll('#nickEmojis span').forEach(s => {
-        s.classList.toggle('selected', s.dataset.emoji === myEmoji);
-        s.onclick = () => {
-          document.querySelectorAll('#nickEmojis span').forEach(x => x.classList.remove('selected'));
-          s.classList.add('selected');
-          myEmoji = s.dataset.emoji;
-        };
-      });
     }
   }
 
   function changeProfile() {
-    const modal = document.getElementById('nickModal');
     document.getElementById('nickInput').value = myNick;
-    modal.querySelectorAll('.nick-emoji-option').forEach(s => s.classList.toggle('selected', s.dataset.emoji === myEmoji));
-    modal.classList.add('visible');
+    setupEmojiHandlers();
+    document.getElementById('nickModal').classList.add('visible');
   }
 
   function saveNickname() {
