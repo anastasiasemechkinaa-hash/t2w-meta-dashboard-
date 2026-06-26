@@ -545,8 +545,9 @@
     .gchat-divider { text-align:center; font-size:10px; color:#ccc; margin:4px 0; position:relative; }
     .gchat-divider::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:#eee; }
     .gchat-divider span { background:#fff; padding:0 8px; position:relative; }
-    tr.has-unread td { border-left:3px solid #e53935 !important; }
-    tr.has-unread td:first-child { border-left:3px solid #e53935; }
+    tr.has-unread td { border-left:3px solid #e53935 !important; background:rgba(229,57,53,.05); }
+    tr.has-comments td:first-child { border-left:3px solid #F5A000 !important; }
+    tr.has-comments .comment-btn { background:#fff3cd !important; color:#b45309 !important; }
 
     /* ─── FIREBASE COMMENTS ─── */
     .btn-comment { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; color: #888; transition: all .15s; white-space:nowrap; }
@@ -629,6 +630,7 @@
       <span class="bell-badge" id="bellBadge" style="display:none">0</span>
     </button>
     <button class="bell-btn" id="pushBtn" onclick="enablePush()" title="Włącz powiadomienia push" style="font-size:16px;display:none">🔕</button>
+    <button class="bell-btn" id="profileBtn" onclick="changeProfile()" title="Zmień awatar / imię" style="font-size:18px">🦊</button>
     <div class="status-dot" id="statusDot"></div>
     <div class="status-text" id="statusText">Niepołączono</div>
   </div>
@@ -873,7 +875,7 @@
     <h3>👋 Witaj w dashboardzie!</h3>
     <p>Podaj swoje imię — będzie widoczne przy komentarzach w kampaniach.</p>
     <input type="text" id="nickInput" placeholder="np. Anastazja" maxlength="20"/>
-    <div class="nick-emoji-label">Вибери свій аватар</div>
+    <div class="nick-emoji-label">Wybierz swój awatar</div>
     <div class="nick-emojis" id="nickEmojis">
       <span class="selected" data-emoji="🦊">🦊</span>
       <span data-emoji="🐱">🐱</span>
@@ -2744,6 +2746,8 @@ function switchTab(name,btn){
     localStorage.setItem('fb_nick', myNick);
     localStorage.setItem('fb_emoji', myEmoji);
     document.getElementById('nickModal').classList.remove('visible');
+    const pb = document.getElementById('profileBtn');
+    if (pb) pb.textContent = myEmoji;
   }
 
   function openComments(cid, name) {
@@ -2950,12 +2954,16 @@ function switchTab(name,btn){
       }
 
       // adset comments
+      document.querySelectorAll('tr.has-comments').forEach(r => r.classList.remove('has-comments'));
       if (commentsRaw) {
         Object.entries(commentsRaw).forEach(([adsetKey, comments]) => {
           if (!comments) return;
           Object.values(comments).forEach(c => {
             msgs.push({ ...c, type: 'comment', adsetKey });
           });
+          // highlight row with any comments (orange border)
+          const cb = document.querySelector(`.adset-cb[data-key="${adsetKey}"]`);
+          if (cb) cb.closest('tr').classList.add('has-comments');
         });
       }
 
@@ -3149,6 +3157,7 @@ function switchTab(name,btn){
   // init nickname check after page loads
   setTimeout(initNickModal, 800);
   setTimeout(() => { requestPushPermission(); updatePushBtn(); }, 1000);
+  setTimeout(() => { const pb = document.getElementById('profileBtn'); if (pb && myEmoji) pb.textContent = myEmoji; }, 900);
 </script>
 </body>
 </html>
