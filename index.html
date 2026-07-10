@@ -927,13 +927,33 @@
 
 <!-- GOOGLE REPORT MODAL -->
 <div class="modal-overlay" id="googleReportModal" onclick="if(event.target===this)this.classList.remove('visible')">
-  <div class="modal" style="max-width:380px">
+  <div class="modal" style="max-width:440px">
     <button class="modal-close" onclick="document.getElementById('googleReportModal').classList.remove('visible')">✕</button>
     <div class="modal-title">📄 Generuj raport Google Ads</div>
-    <p style="font-size:13px;color:#666;margin:8px 0 24px">Wybierz format raportu</p>
-    <div style="display:flex;gap:10px">
-      <button onclick="generateGoogleReport('html')" style="flex:1;padding:14px;background:#F5A000;color:#111;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">⬇ Pobierz HTML</button>
-      <button onclick="generateGoogleReport('pdf')" style="flex:1;padding:14px;background:#111;color:#F5A000;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">🖨️ Otwórz do PDF</button>
+    <div style="display:flex;flex-direction:column;gap:16px;margin-top:12px">
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px">Okres raportu</label>
+        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+          <button onclick="setGRepRange('this_month')" id="grBtn-month" class="date-btn active" style="font-size:11px;padding:5px 10px">Ten miesiąc</button>
+          <button onclick="setGRepRange('last_month')" id="grBtn-last" class="date-btn" style="font-size:11px;padding:5px 10px">Poprzedni miesiąc</button>
+          <button onclick="setGRepRange('last_30d')" id="grBtn-30d" class="date-btn" style="font-size:11px;padding:5px 10px">30 dni</button>
+          <button onclick="setGRepRange('last_7d')" id="grBtn-7d" class="date-btn" style="font-size:11px;padding:5px 10px">7 dni</button>
+          <button onclick="setGRepRange('custom')" id="grBtn-custom" class="date-btn" style="font-size:11px;padding:5px 10px">Własny</button>
+        </div>
+        <div id="grCustomDates" style="display:none;gap:8px;align-items:center">
+          <input type="date" id="grFrom" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:7px;font-size:12px"/>
+          <span>—</span>
+          <input type="date" id="grTo" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:7px;font-size:12px"/>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px">Nazwa raportu</label>
+        <input type="text" id="grTitle" placeholder="np. Czerwiec 2026" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;outline:none"/>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="generateGoogleReport('html')" style="flex:1;padding:14px;background:#F5A000;color:#111;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">⬇ Pobierz HTML</button>
+        <button onclick="generateGoogleReport('pdf')" style="flex:1;padding:14px;background:#111;color:#F5A000;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">🖨️ Otwórz do PDF</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2143,17 +2163,58 @@ function switchTab(name,btn){
     localStorage.setItem('g_spends', JSON.stringify(spends));
   }
 
+  let gRepPeriod = 'this_month';
+
+  function setGRepRange(period) {
+    gRepPeriod = period;
+    document.querySelectorAll('#googleReportModal .date-btn').forEach(b => b.classList.remove('active'));
+    const map = { this_month:'grBtn-month', last_month:'grBtn-last', last_30d:'grBtn-30d', last_7d:'grBtn-7d', custom:'grBtn-custom' };
+    document.getElementById(map[period])?.classList.add('active');
+    document.getElementById('grCustomDates').style.display = period === 'custom' ? 'flex' : 'none';
+    // auto-fill title
+    const now = new Date();
+    const titles = {
+      this_month: now.toLocaleDateString('pl',{month:'long',year:'numeric'}),
+      last_month: new Date(now.getFullYear(), now.getMonth()-1, 1).toLocaleDateString('pl',{month:'long',year:'numeric'}),
+      last_30d: 'Ostatnie 30 dni',
+      last_7d: 'Ostatnie 7 dni',
+      custom: ''
+    };
+    if (titles[period]) document.getElementById('grTitle').value = titles[period].replace(/^\w/, c=>c.toUpperCase());
+  }
+
   function openGoogleReportModal() {
+    setGRepRange('this_month');
     document.getElementById('googleReportModal').classList.add('visible');
   }
 
   function generateGoogleReport(mode='html'){
     document.getElementById('googleReportModal').classList.remove('visible');
     if (!gJsonData) { alert('Brak danych Google Ads. Poczekaj na załadowanie.'); return; }
-    const activePeriodBtn = document.querySelector('#gDateRow .date-btn.active');
-    const periodLabel = activePeriodBtn ? activePeriodBtn.textContent : 'Ten miesiąc';
-    const activePeriod = activePeriodBtn?.id === 'gbtn-30d' ? 'last_30d' : activePeriodBtn?.id === 'gbtn-7d' ? 'last_7d' : 'this_month';
-    const rows = gJsonData[activePeriod] || [];
+    const titleVal = document.getElementById('grTitle').value || 'Google Ads';
+    const periodLabel = titleVal;
+    let rows;
+    if (gRepPeriod === 'custom') {
+      const from = document.getElementById('grFrom').value;
+      const to   = document.getElementById('grTo').value;
+      if (!from || !to) { alert('Wybierz obie daty!'); document.getElementById('googleReportModal').classList.add('visible'); return; }
+      const daily = gJsonData.daily || [];
+      if (!daily.length) { alert('Brak danych dziennych — poczekaj na aktualizację danych (google_data.json).'); return; }
+      // aggregate daily rows within range per campaign
+      const agg = {};
+      daily.filter(r => r.date >= from && r.date <= to).forEach(r => {
+        if (!agg[r.name]) agg[r.name] = { name: r.name, channel: r.channel, sessions:0, views:0, conversions:0, users:0, cost:0, clicks:0, impressions:0 };
+        const a = agg[r.name];
+        a.sessions += r.sessions; a.views += r.views; a.conversions += r.conversions;
+        a.users += r.users; a.cost += r.cost; a.clicks += r.clicks; a.impressions += r.impressions;
+      });
+      rows = Object.values(agg).map(a => ({ ...a, cost: Math.round(a.cost*100)/100 })).sort((x,y) => y.cost - x.cost);
+      if (!rows.length) { alert('Brak danych w wybranym okresie.'); return; }
+    } else {
+      const periodMap = { this_month:'this_month', last_month:'last_month', last_30d:'last_30d', last_7d:'last_7d' };
+      rows = gJsonData[periodMap[gRepPeriod] || 'this_month'] || [];
+      if (!rows.length && gRepPeriod === 'last_month') { alert('Brak danych za poprzedni miesiąc — dane pojawią się po aktualizacji google_data.json.'); return; }
+    }
     const updated = gJsonData.updated ? new Date(gJsonData.updated).toLocaleString('pl') : '—';
     let tSess=0, tViews=0, tConv=0;
     rows.forEach(r=>{ tSess+=r.sessions||0; tViews+=r.views||0; tConv+=r.conversions||0; });

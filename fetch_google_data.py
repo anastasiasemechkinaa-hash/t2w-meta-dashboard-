@@ -91,6 +91,59 @@ def fetch_data(creds, start_date, end_date):
     rows.sort(key=lambda x: x["cost"], reverse=True)
     return rows
 
+def fetch_daily(creds, start_date, end_date):
+    """Dane dzienne per kampania — do własnych zakresów dat na dashboardzie."""
+    client = BetaAnalyticsDataClient(credentials=creds)
+    request = RunReportRequest(
+        property=f"properties/{PROPERTY_ID}",
+        date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+        dimensions=[
+            Dimension(name="date"),
+            Dimension(name="sessionCampaignName"),
+            Dimension(name="sessionDefaultChannelGroup"),
+        ],
+        metrics=[
+            Metric(name="sessions"),
+            Metric(name="screenPageViews"),
+            Metric(name="conversions"),
+            Metric(name="totalUsers"),
+            Metric(name="advertiserAdCost"),
+            Metric(name="advertiserAdClicks"),
+            Metric(name="advertiserAdImpressions"),
+        ],
+        dimension_filter=FilterExpression(
+            filter=Filter(
+                field_name="sessionDefaultChannelGroup",
+                string_filter=Filter.StringFilter(
+                    match_type=Filter.StringFilter.MatchType.CONTAINS,
+                    value="Paid Search"
+                )
+            )
+        ),
+        limit=100000
+    )
+    response = client.run_report(request)
+
+    rows = []
+    for row in response.rows:
+        date     = row.dimension_values[0].value  # YYYYMMDD
+        campaign = row.dimension_values[1].value
+        channel  = row.dimension_values[2].value
+        if campaign in ("(not set)", "(direct)", ""):
+            continue
+        rows.append({
+            "date": f"{date[:4]}-{date[4:6]}-{date[6:]}",
+            "name": campaign, "channel": channel,
+            "sessions": int(row.metric_values[0].value or 0),
+            "views": int(row.metric_values[1].value or 0),
+            "conversions": int(float(row.metric_values[2].value or 0)),
+            "users": int(row.metric_values[3].value or 0),
+            "cost": round(float(row.metric_values[4].value or 0), 2),
+            "clicks": int(row.metric_values[5].value or 0),
+            "impressions": int(row.metric_values[6].value or 0),
+        })
+    return rows
+
 def main():
     print("🔄 Pobieranie danych z GA4...")
     creds = get_credentials()
@@ -99,15 +152,23 @@ def main():
     first_day = today.replace(day=1).strftime("%Y-%m-%d")
     yesterday = (today - timedelta(days=1)).strftime("%Y-%m-%d")
 
+    # poprzedni miesiąc: od 1. dnia do ostatniego dnia
+    last_month_end = today.replace(day=1) - timedelta(days=1)
+    last_month_start = last_month_end.replace(day=1)
+
     rows_month = fetch_data(creds, first_day, yesterday)
+    rows_last_month = fetch_data(creds, last_month_start.strftime("%Y-%m-%d"), last_month_end.strftime("%Y-%m-%d"))
     rows_30d   = fetch_data(creds, (today - timedelta(days=30)).strftime("%Y-%m-%d"), yesterday)
     rows_7d    = fetch_data(creds, (today - timedelta(days=7)).strftime("%Y-%m-%d"), yesterday)
+    rows_daily = fetch_daily(creds, (today - timedelta(days=180)).strftime("%Y-%m-%d"), yesterday)
 
     output = {
         "updated": datetime.utcnow().isoformat() + "Z",
         "this_month": rows_month,
+        "last_month": rows_last_month,
         "last_30d":   rows_30d,
-        "last_7d":    rows_7d
+        "last_7d":    rows_7d,
+        "daily":      rows_daily
     }
 
     with open("google_data.json", "w", encoding="utf-8") as f:
