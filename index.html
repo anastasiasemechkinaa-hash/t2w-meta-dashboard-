@@ -1005,6 +1005,12 @@
     <button class="date-btn active" id="gbtn-month" onclick="switchGooglePeriod('this_month', this)">Ten miesiąc</button>
     <button class="date-btn" id="gbtn-30d" onclick="switchGooglePeriod('last_30d', this)">30 dni</button>
     <button class="date-btn" id="gbtn-7d" onclick="switchGooglePeriod('last_7d', this)">7 dni</button>
+    <div class="date-custom" id="gDateCustomWrap">
+      <span>📅</span>
+      <input type="date" id="gDateFrom" onchange="setGoogleCustomRange()"/>
+      <span>—</span>
+      <input type="date" id="gDateTo" onchange="setGoogleCustomRange()"/>
+    </div>
   </div>
 
   <!-- G CONTROLS -->
@@ -2216,16 +2222,26 @@ function switchTab(name,btn){
       if (!rows.length && gRepPeriod === 'last_month') { alert('Brak danych za poprzedni miesiąc — dane pojawią się po aktualizacji google_data.json.'); return; }
     }
     const updated = gJsonData.updated ? new Date(gJsonData.updated).toLocaleString('pl') : '—';
-    let tSess=0, tViews=0, tConv=0;
-    rows.forEach(r=>{ tSess+=r.sessions||0; tViews+=r.views||0; tConv+=r.conversions||0; });
-    const rowsHtml = rows.map(r=>`<tr>
+    let tSess=0, tViews=0, tConv=0, tCost=0, tClicks=0, tImpr=0;
+    rows.forEach(r=>{ tSess+=r.sessions||0; tViews+=r.views||0; tConv+=r.conversions||0; tCost+=r.cost||0; tClicks+=r.clicks||0; tImpr+=r.impressions||0; });
+    const gFmt = v => v ? v.toFixed(2).replace('.',',') : '—';
+    const tCPC = tClicks>0 ? gFmt(tCost/tClicks) : '—';
+    const tCPA = tConv>0 ? gFmt(tCost/tConv) : '—';
+    const tCTR = tImpr>0 ? gFmt(tClicks/tImpr*100) : '—';
+    const rowsHtml = rows.map(r=>{
+      const rCPC = r.clicks>0 ? gFmt((r.cost||0)/r.clicks) : '—';
+      const rCPA = r.conversions>0 ? gFmt((r.cost||0)/r.conversions) : '—';
+      return `<tr>
       <td style="padding:10px 14px;font-weight:600">${r.name}</td>
       <td style="padding:10px 14px;color:#666">${r.channel||'Paid Search'}</td>
-      <td style="padding:10px 14px"><span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">AKTYWNA</span></td>
-      <td style="padding:10px 14px;text-align:right">${(r.views||0).toLocaleString('pl')}</td>
+      <td style="padding:10px 14px;text-align:right;font-weight:700;color:#c2410c">${gFmt(r.cost)}</td>
+      <td style="padding:10px 14px;text-align:right">${(r.impressions||0).toLocaleString('pl')}</td>
+      <td style="padding:10px 14px;text-align:right">${(r.clicks||0).toLocaleString('pl')}</td>
+      <td style="padding:10px 14px;text-align:right">${rCPC}</td>
       <td style="padding:10px 14px;text-align:right">${(r.sessions||0).toLocaleString('pl')}</td>
       <td style="padding:10px 14px;text-align:right;color:#f59e0b;font-weight:700">${r.conversions||'—'}</td>
-    </tr>`).join('');
+      <td style="padding:10px 14px;text-align:right">${rCPA}</td>
+    </tr>`;}).join('');
     const html = '<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">'
       + '<title>Raport Google Ads – ' + periodLabel + '</title>'
       + '<style>'
@@ -2261,12 +2277,13 @@ function switchTab(name,btn){
       + '<div class="pdf-bar"><button class="btn-print" onclick="window.print()">🖨️ Drukuj / Zapisz jako PDF</button><button class="btn-close" onclick="window.close()">✕ Zamknij</button><span>⚠️ W dialogu druku wybierz orientację: <strong>Poziomo (Landscape)</strong> — inaczej tabela zostanie obcięta</span></div>'
       + '<div class="hero"><div class="hero-logo">t2w <span>Ads</span></div><div class="hero-info"><strong>Raport Google Ads</strong>Okres: ' + periodLabel + '<br>Wygenerowano: ' + new Date().toLocaleDateString('pl') + '<br>Aktualizacja danych: ' + updated + '</div></div>'
       + '<div class="content">'
-      + '<div class="kpis">'
-      + '<div class="kpi"><div class="lbl">Wyświetlenia</div><div class="val">' + tViews.toLocaleString('pl') + '</div><div class="sub">łącznie w okresie</div></div>'
+      + '<div class="kpis" style="grid-template-columns:repeat(4,1fr)">'
+      + '<div class="kpi"><div class="lbl">Wydatki</div><div class="val">' + gFmt(tCost) + ' zł</div><div class="sub">łącznie w okresie</div></div>'
+      + '<div class="kpi"><div class="lbl">Kliknięcia</div><div class="val">' + tClicks.toLocaleString('pl') + '</div><div class="sub">CPC ' + tCPC + ' zł &nbsp;|&nbsp; CTR ' + tCTR + '%</div></div>'
       + '<div class="kpi"><div class="lbl">Sesje</div><div class="val">' + tSess.toLocaleString('pl') + '</div><div class="sub">użytkownicy z Google</div></div>'
-      + '<div class="kpi"><div class="lbl">Konwersje</div><div class="val" style="color:#f59e0b">' + tConv + '</div><div class="sub">łącznie w okresie</div></div>'
+      + '<div class="kpi"><div class="lbl">Konwersje</div><div class="val" style="color:#f59e0b">' + tConv + '</div><div class="sub">CPA ' + tCPA + ' zł</div></div>'
       + '</div>'
-      + '<table><thead><tr><th>Kampania</th><th>Typ</th><th>Status</th><th class="r">Wyświetlenia</th><th class="r">Sesje</th><th class="r">Konwersje</th></tr></thead>'
+      + '<table><thead><tr><th>Kampania</th><th>Typ</th><th class="r">Wydatki (PLN)</th><th class="r">Wyświetlenia</th><th class="r">Kliknięcia</th><th class="r">CPC (PLN)</th><th class="r">Sesje</th><th class="r">Konwersje</th><th class="r">CPA (PLN)</th></tr></thead>'
       + '<tbody>' + rowsHtml + '</tbody></table>'
       + '<div class="footer">t2w Ads Dashboard &nbsp;·&nbsp; <strong>time2work.pl</strong> &nbsp;·&nbsp; dane z Google Analytics 4</div>'
       + '</div></body></html>';
@@ -2385,8 +2402,37 @@ function switchTab(name,btn){
 
   function switchGooglePeriod(period, btn) {
     document.querySelectorAll('#gDateRow .date-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('gDateCustomWrap').classList.remove('active');
     btn.classList.add('active');
     if (gJsonData) renderGoogleJSON(gJsonData[period] || []);
+  }
+
+  function setGoogleCustomRange() {
+    const from = document.getElementById('gDateFrom').value;
+    const to   = document.getElementById('gDateTo').value;
+    if (!from || !to || !gJsonData || !gJsonData.daily) return;
+    document.querySelectorAll('#gDateRow .date-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('gDateCustomWrap').classList.add('active');
+
+    const byCampaign = {};
+    gJsonData.daily.forEach(d => {
+      if (d.date < from || d.date > to) return;
+      const key = d.name + '|' + d.channel;
+      if (!byCampaign[key]) {
+        byCampaign[key] = { name: d.name, channel: d.channel, sessions:0, views:0, conversions:0, users:0, cost:0, clicks:0, impressions:0, adgroups:[] };
+      }
+      const c = byCampaign[key];
+      c.sessions     += d.sessions;
+      c.views        += d.views;
+      c.conversions  += d.conversions;
+      c.users        += d.users;
+      c.cost         += d.cost;
+      c.clicks       += d.clicks;
+      c.impressions  += d.impressions;
+    });
+    const rows = Object.values(byCampaign).map(r => ({ ...r, cost: Math.round(r.cost * 100) / 100 }))
+      .sort((a,b) => b.cost - a.cost);
+    renderGoogleJSON(rows);
   }
 
   function renderGoogleJSON(rows) {
