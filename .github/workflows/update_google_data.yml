@@ -1,0 +1,35 @@
+name: Update Google Ads Data
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # щодня о 6:00 UTC (8:00 Варшава)
+  workflow_dispatch:        # можна запустити вручну
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install google-analytics-data google-auth google-auth-oauthlib
+
+      - name: Fetch GA4 data
+        env:
+          GOOGLE_TOKEN_JSON: ${{ secrets.GOOGLE_TOKEN_JSON }}
+        run: python fetch_google_data.py
+
+      - name: Commit & push google_data.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add google_data.json
+          git diff --cached --quiet || git commit -m "chore: update google_data.json [skip ci]"
+          git push
