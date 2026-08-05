@@ -2267,6 +2267,20 @@ function switchTab(name,btn){
     const tCPC = tClicks>0 ? gFmt(tCost/tClicks) : '—';
     const tCPA = tConv>0 ? gFmt(tCost/tConv) : '—';
     const tCTR = tImpr>0 ? gFmt(tClicks/tImpr*100) : '—';
+    let ggNote = '';
+    const ggWithConv = rows.filter(r => (r.conversions||0) > 0);
+    if (ggWithConv.length > 0) {
+      const ggBest = ggWithConv.reduce((a,b) => (a.cost/a.conversions) < (b.cost/b.conversions) ? a : b);
+      const ggWorst = ggWithConv.reduce((a,b) => (a.cost/a.conversions) > (b.cost/b.conversions) ? a : b);
+      ggNote += `<strong>✓ „${ggBest.name}" — najlepszy CPA:</strong> ${ggBest.conversions} konwersji przy CPA ${gFmt(ggBest.cost/ggBest.conversions)} zł, budżet ${gFmt(ggBest.cost)} zł.`;
+      if (ggWorst.name !== ggBest.name) {
+        ggNote += ` &nbsp;&nbsp;<strong>⚠ „${ggWorst.name}" — najwyższy CPA:</strong> ${ggWorst.conversions} konwersji przy CPA ${gFmt(ggWorst.cost/ggWorst.conversions)} zł — najdroższy lead w koncie.`;
+      }
+    }
+    const ggNoConv = rows.filter(r => !(r.conversions>0) && (r.cost||0) > 0);
+    if (ggNoConv.length > 0) {
+      ggNote += ` &nbsp;&nbsp;<strong>⚠ Bez konwersji:</strong> ${ggNoConv.map(r=>`„${r.name}"`).join(', ')} — wydatki bez zarejestrowanych konwersji.`;
+    }
     const rowsHtml = rows.map(r=>{
       const rCPC = r.clicks>0 ? gFmt((r.cost||0)/r.clicks) : '—';
       const rCPA = r.conversions>0 ? gFmt((r.cost||0)/r.conversions) : '—';
@@ -2311,6 +2325,7 @@ function switchTab(name,btn){
       + '.badge-active{background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}'
       + '.conv{color:#f59e0b;font-weight:800}'
       + '.footer{margin-top:32px;text-align:center;font-size:11px;color:#aaa;padding-bottom:40px}'
+      + '.section-note{margin:0 0 20px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 18px;font-size:12px;color:#78350f;line-height:1.7}'
       + '@page{size:A4 landscape;margin:6mm}@media print{.pdf-bar{display:none!important}body{background:#fff;font-size:8px}table{font-size:7.5px;table-layout:fixed;width:100%}th,td{padding:2px 3px!important;word-break:break-word;white-space:normal!important}th:first-child,td:first-child{width:18%}th:nth-child(2),td:nth-child(2){width:6%}.hero::before,.hero::after,.hero-deco{display:none!important}.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact;overflow:hidden;border-radius:8px;padding:16px 24px!important}thead tr{-webkit-print-color-adjust:exact;print-color-adjust:exact}.hero-cards{gap:4px}.hero-card{padding:6px 10px!important}.kpi-row,.tab-kpi-row{display:none!important}.tab-nav{display:none!important}}'
       + '</style></head><body>'
       + '<div class="pdf-bar"><button class="btn-print" onclick="window.print()">🖨️ Drukuj / Zapisz jako PDF</button><button class="btn-close" onclick="window.close()">✕ Zamknij</button><span>⚠️ W dialogu druku wybierz orientację: <strong>Poziomo (Landscape)</strong> — inaczej tabela zostanie obcięta</span></div>'
@@ -2322,6 +2337,7 @@ function switchTab(name,btn){
       + '<div class="kpi"><div class="lbl">Sesje</div><div class="val">' + tSess.toLocaleString('pl') + '</div><div class="sub">użytkownicy z Google</div></div>'
       + '<div class="kpi"><div class="lbl">Konwersje</div><div class="val" style="color:#f59e0b">' + tConv + '</div><div class="sub">CPA ' + tCPA + ' zł</div></div>'
       + '</div>'
+      + (ggNote ? '<div class="section-note">' + ggNote + '</div>' : '')
       + '<table><thead><tr><th>Kampania</th><th>Typ</th><th class="r">Wydatki (PLN)</th><th class="r">Wyświetlenia</th><th class="r">Kliknięcia</th><th class="r">CPC (PLN)</th><th class="r">Sesje</th><th class="r">Konwersje</th><th class="r">CPA (PLN)</th></tr></thead>'
       + '<tbody>' + rowsHtml + '</tbody></table>'
       + '<p style="font-size:11px;color:#999;margin-top:14px;line-height:1.6">ℹ️ Konwersje liczone przez <strong>GA4</strong> (zdarzenia kluczowe wg sesji) — mogą się różnić od natywnych konwersji w panelu Google Ads, bo GA4 stosuje inny model atrybucji niż Google Ads. Wydatki (koszt) są identyczne w obu źródłach.</p>'
