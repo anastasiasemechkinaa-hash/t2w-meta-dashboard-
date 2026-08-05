@@ -2251,9 +2251,9 @@ function switchTab(name,btn){
         if (!agg[r.name]) agg[r.name] = { name: r.name, channel: r.channel, sessions:0, views:0, conversions:0, users:0, cost:0, clicks:0, impressions:0 };
         const a = agg[r.name];
         a.sessions += r.sessions; a.views += r.views; a.conversions += r.conversions;
-        a.users += r.users; a.cost += r.cost; a.clicks += r.clicks; a.impressions += r.impressions;
+        a.users += r.users; a.cost += Math.round(r.cost*100); a.clicks += r.clicks; a.impressions += r.impressions;
       });
-      rows = Object.values(agg).map(a => ({ ...a, cost: Math.round(a.cost*100)/100 })).sort((x,y) => y.cost - x.cost);
+      rows = Object.values(agg).map(a => ({ ...a, cost: a.cost/100 })).sort((x,y) => y.cost - x.cost);
       if (!rows.length) { alert('Brak danych w wybranym okresie.'); return; }
     } else {
       const periodMap = { this_month:'this_month', last_month:'last_month', last_30d:'last_30d', last_7d:'last_7d' };
@@ -2324,6 +2324,7 @@ function switchTab(name,btn){
       + '</div>'
       + '<table><thead><tr><th>Kampania</th><th>Typ</th><th class="r">Wydatki (PLN)</th><th class="r">Wyświetlenia</th><th class="r">Kliknięcia</th><th class="r">CPC (PLN)</th><th class="r">Sesje</th><th class="r">Konwersje</th><th class="r">CPA (PLN)</th></tr></thead>'
       + '<tbody>' + rowsHtml + '</tbody></table>'
+      + '<p style="font-size:11px;color:#999;margin-top:14px;line-height:1.6">ℹ️ Konwersje liczone przez <strong>GA4</strong> (zdarzenia kluczowe wg sesji) — mogą się różnić od natywnych konwersji w panelu Google Ads, bo GA4 stosuje inny model atrybucji niż Google Ads. Wydatki (koszt) są identyczne w obu źródłach.</p>'
       + '<div class="footer">t2w Ads Dashboard &nbsp;·&nbsp; <strong>time2work.pl</strong> &nbsp;·&nbsp; dane z Google Analytics 4</div>'
       + '</div></body></html>';
     if (mode === 'pdf') {
@@ -2560,6 +2561,7 @@ function switchTab(name,btn){
       document.getElementById('gConnectBar').style.display = 'none';
       document.getElementById('gDateRow').style.display = 'flex';
       document.getElementById('gControlsLabel').textContent = `🔵 Dane z Google Analytics 4 · Aktualizacja: ${new Date(json.updated).toLocaleString('pl')}`;
+      document.getElementById('gControlsLabel').title = 'Konwersje liczone przez GA4 (zdarzenia kluczowe wg sesji) — mogą się różnić od natywnych konwersji w panelu Google Ads (inny model atrybucji).';
       renderGoogleJSON(json.this_month || []);
     } catch(e) {}
   }
