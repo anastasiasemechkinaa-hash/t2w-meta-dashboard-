@@ -1,28 +1,28 @@
 {
-  "updated": "2026-08-10T07:21:01.080232Z",
+  "updated": "2026-08-11T06:57:14.770309Z",
   "this_month": [
     {
       "name": "EN oferty pracy",
       "channel": "Paid Search",
-      "sessions": 125,
-      "views": 386,
+      "sessions": 141,
+      "views": 443,
       "conversions": 6,
-      "users": 98,
-      "cost": 414.59,
-      "clicks": 166,
-      "impressions": 620,
+      "users": 112,
+      "cost": 505.15,
+      "clicks": 198,
+      "impressions": 737,
       "adgroups": []
     },
     {
       "name": "USŁ: PL: Sprzedaż Rekrutacji i Użyczenia",
       "channel": "Paid Search",
-      "sessions": 30,
-      "views": 33,
+      "sessions": 33,
+      "views": 37,
       "conversions": 0,
-      "users": 21,
-      "cost": 198.28,
-      "clicks": 36,
-      "impressions": 256,
+      "users": 23,
+      "cost": 212.3,
+      "clicks": 40,
+      "impressions": 297,
       "adgroups": []
     }
   ],
@@ -57,24 +57,24 @@
       "name": "EN oferty pracy",
       "channel": "Paid Search",
       "sessions": 383,
-      "views": 1106,
-      "conversions": 25,
-      "users": 304,
-      "cost": 1464.6,
-      "clicks": 588,
-      "impressions": 2112,
+      "views": 1128,
+      "conversions": 24,
+      "users": 308,
+      "cost": 1534.49,
+      "clicks": 605,
+      "impressions": 2178,
       "adgroups": []
     },
     {
       "name": "USŁ: PL: Sprzedaż Rekrutacji i Użyczenia",
       "channel": "Paid Search",
-      "sessions": 125,
-      "views": 173,
+      "sessions": 126,
+      "views": 174,
       "conversions": 5,
-      "users": 83,
-      "cost": 850.86,
-      "clicks": 156,
-      "impressions": 958,
+      "users": 84,
+      "cost": 852.56,
+      "clicks": 157,
+      "impressions": 988,
       "adgroups": []
     }
   ],
@@ -82,25 +82,25 @@
     {
       "name": "EN oferty pracy",
       "channel": "Paid Search",
-      "sessions": 87,
-      "views": 285,
-      "conversions": 4,
-      "users": 70,
-      "cost": 302.07,
-      "clicks": 122,
-      "impressions": 483,
+      "sessions": 89,
+      "views": 275,
+      "conversions": 2,
+      "users": 74,
+      "cost": 339.47,
+      "clicks": 134,
+      "impressions": 547,
       "adgroups": []
     },
     {
       "name": "USŁ: PL: Sprzedaż Rekrutacji i Użyczenia",
       "channel": "Paid Search",
-      "sessions": 27,
-      "views": 30,
+      "sessions": 25,
+      "views": 29,
       "conversions": 0,
-      "users": 20,
-      "cost": 191.44,
+      "users": 18,
+      "cost": 183.74,
       "clicks": 34,
-      "impressions": 228,
+      "impressions": 224,
       "adgroups": []
     }
   ],
@@ -322,18 +322,6 @@
       "impressions": 79
     },
     {
-      "date": "2026-02-11",
-      "name": "EN oferty pracy",
-      "channel": "Paid Search",
-      "sessions": 16,
-      "views": 43,
-      "conversions": 0,
-      "users": 14,
-      "cost": 20.91,
-      "clicks": 22,
-      "impressions": 96
-    },
-    {
       "date": "2026-02-21",
       "name": "EN oferty pracy",
       "channel": "Paid Search",
@@ -452,6 +440,18 @@
       "cost": 60.85,
       "clicks": 26,
       "impressions": 83
+    },
+    {
+      "date": "2026-08-10",
+      "name": "EN oferty pracy",
+      "channel": "Paid Search",
+      "sessions": 16,
+      "views": 57,
+      "conversions": 0,
+      "users": 15,
+      "cost": 90.56,
+      "clicks": 32,
+      "impressions": 117
     },
     {
       "date": "2026-04-13",
@@ -4078,16 +4078,16 @@
       "impressions": 19
     },
     {
-      "date": "2026-02-11",
+      "date": "2026-08-10",
       "name": "USŁ: PL: Sprzedaż Rekrutacji i Użyczenia",
       "channel": "Paid Search",
-      "sessions": 2,
-      "views": 3,
+      "sessions": 3,
+      "views": 4,
       "conversions": 0,
-      "users": 2,
-      "cost": 17.03,
-      "clicks": 3,
-      "impressions": 24
+      "users": 3,
+      "cost": 14.02,
+      "clicks": 4,
+      "impressions": 41
     },
     {
       "date": "2026-02-14",
@@ -4964,30 +4964,6 @@
       "cost": 6.84,
       "clicks": 2,
       "impressions": 15
-    },
-    {
-      "date": "2026-02-11",
-      "name": "RU: RESTYL",
-      "channel": "Paid Search",
-      "sessions": 1,
-      "views": 1,
-      "conversions": 0,
-      "users": 1,
-      "cost": 2.72,
-      "clicks": 2,
-      "impressions": 26
-    },
-    {
-      "date": "2026-02-11",
-      "name": "RU_Szwaczki/krawcowe",
-      "channel": "Paid Search",
-      "sessions": 1,
-      "views": 1,
-      "conversions": 0,
-      "users": 1,
-      "cost": 0.99,
-      "clicks": 1,
-      "impressions": 4
     },
     {
       "date": "2026-02-13",
