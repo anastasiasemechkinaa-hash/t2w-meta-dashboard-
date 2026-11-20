@@ -1118,6 +1118,7 @@
   function init() {
     const token = getToken();
     if (!token) return;
+    checkTokenExpiry(token);
     document.getElementById('tokenScreen').style.display = 'none';
     document.getElementById('mainTabs').style.display = 'flex';
     document.getElementById('mainDash').classList.add('visible');
@@ -1440,6 +1441,7 @@
     const el = document.getElementById('errorBox');
     const isExpired = msg.includes('Session has expired') || msg.includes('expired') || msg.includes('Invalid OAuth') || msg.includes('OAuthException') || msg.includes('access_token');
     if (isExpired) {
+      reportTokenExpired();
       el.innerHTML = `
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
           <div style="flex:1;min-width:200px;">
@@ -2869,8 +2871,56 @@ function switchTab(name,btn){
             sent_at: new Date().toLocaleString('pl-PL')
           }
         })
+      }).then(async r => {
+        if (!r.ok) {
+          const txt = await r.text().catch(() => '');
+          reportEmailError(txt || ('HTTP ' + r.status), authorNick);
+        }
       });
-    } catch(e) { console.warn('EmailJS error:', e); }
+    } catch(e) { console.warn('EmailJS error:', e); reportEmailError(String(e), authorNick); }
+  }
+
+  // ─── STATUS dla Dam'yano (z 20.11.2026): błąd maila i ważność tokena Meta. Tokena NIGDY nie zapisujemy — tylko daty. ───
+  const STATUS_URL = 'https://t2w-ads-dashboard-default-rtdb.europe-west1.firebasedatabase.app/comments/_status';  // /status jest zablokowany regułami bazy
+  function reportEmailError(err, nick) {
+    try {
+      fetch(`${STATUS_URL}/email_errors.json`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ts: Date.now(), nick: nick || '', error: String(err).slice(0, 300) }) });
+    } catch(e) {}
+    showStatusBanner('📧 Powiadomienie mailowe NIE zostało wysłane (EmailJS: ' + String(err).slice(0, 120) + '). Komentarz jest zapisany — Anastazja dostanie info od Dam\'yano.');
+  }
+  function showStatusBanner(msg) {
+    let b = document.getElementById('statusBanner');
+    if (!b) {
+      b = document.createElement('div'); b.id = 'statusBanner';
+      b.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:9999;max-width:min(680px,92vw);background:#B42318;color:#fff;padding:12px 40px 12px 16px;border-radius:10px;font:600 13px/1.4 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      const x = document.createElement('button'); x.textContent = '×'; x.setAttribute('aria-label', 'Zamknij');
+      x.style.cssText = 'position:absolute;right:8px;top:6px;background:none;border:0;color:#fff;font-size:20px;cursor:pointer';
+      x.onclick = () => b.remove(); b.appendChild(x);
+      const s = document.createElement('span'); s.className = 'sb-msg'; b.appendChild(s);
+      document.body.appendChild(b);
+    }
+    b.querySelector('.sb-msg').textContent = msg;
+  }
+  async function checkTokenExpiry(token) {
+    try {
+      const r = await fetch(`https://graph.facebook.com/debug_token?input_token=${encodeURIComponent(token)}&access_token=${encodeURIComponent(token)}`);
+      const j = await r.json(); const d = j && j.data; if (!d) return;
+      const info = { expires_at: d.expires_at || 0, data_access_expires_at: d.data_access_expires_at || 0,
+        is_valid: !!d.is_valid, checked_at: Date.now(), nick: localStorage.getItem('fb_nick') || '' };
+      fetch(`${STATUS_URL}/token.json`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(info) });
+      const exp = info.expires_at ? info.expires_at * 1000 : 0;
+      if (exp && exp - Date.now() < 7 * 864e5) {
+        const dni = Math.max(0, Math.ceil((exp - Date.now()) / 864e5));
+        showStatusBanner('🔑 Token Meta wygasa za ' + dni + ' dni (' + new Date(exp).toLocaleDateString('pl-PL') + ') — Anastazja przygotuje nowy.');
+      }
+    } catch(e) {}
+  }
+  function reportTokenExpired() {
+    try {
+      fetch(`${STATUS_URL}/token_expired.json`, { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ts: Date.now(), nick: localStorage.getItem('fb_nick') || '' }) });
+    } catch(e) {}
   }
 
   // ─── FIREBASE COMMENTS ───
@@ -3124,7 +3174,7 @@ function switchTab(name,btn){
       document.querySelectorAll('tr.has-comments').forEach(r => r.classList.remove('has-comments'));
       if (commentsRaw) {
         Object.entries(commentsRaw).forEach(([adsetKey, comments]) => {
-          if (!comments) return;
+          if (!comments || adsetKey === '_status') return;
           Object.values(comments).forEach(c => {
             msgs.push({ ...c, type: 'comment', adsetKey });
           });
@@ -3285,7 +3335,7 @@ function switchTab(name,btn){
       const msgs = [];
       if (chatRaw) Object.values(chatRaw).forEach(m => msgs.push({ ...m, type: 'chat' }));
       if (commentsRaw) Object.entries(commentsRaw).forEach(([k, cs]) => {
-        if (cs) Object.values(cs).forEach(c => msgs.push({ ...c, type: 'comment', adsetKey: k }));
+        if (cs && k !== '_status') Object.values(cs).forEach(c => msgs.push({ ...c, type: 'comment', adsetKey: k }));
       });
 
       // find truly new messages (newer than lastReadTs, not mine)
